@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600mm" height="746.0mm" viewBox="-5 -5 610 756.0">
+<rect x="0" y="0" width="600" height="746.0" fill="#f3e3c3" stroke="#bbb" stroke-width="0.5"/>
+<line x1="125.0" y1="0.0" x2="125.0" y2="468.0" stroke="#14c" stroke-width="1" stroke-dasharray="6 4"/>
+<line x1="125.0" y1="468.0" x2="439.0" y2="468.0" stroke="#14c" stroke-width="1" stroke-dasharray="6 4"/>
+<line x1="439.0" y1="468.0" x2="439.0" y2="0.0" stroke="#14c" stroke-width="1" stroke-dasharray="6 4"/>
+<line x1="439.0" y1="125.0" x2="125.0" y2="125.0" stroke="#14c" stroke-width="1" stroke-dasharray="6 4"/>
+<line x1="125.0" y1="339.0" x2="439.0" y2="339.0" stroke="#14c" stroke-width="1" stroke-dasharray="6 4"/>
+<line x1="431.0" y1="686.0" x2="133.0" y2="686.0" stroke="#14c" stroke-width="1" stroke-dasharray="6 4"/>
+<line x1="133.0" y1="686.0" x2="125.0" y2="686.0" stroke="#d22" stroke-width="1"/>
+<line x1="125.0" y1="686.0" x2="125.0" y2="468.0" stroke="#d22" stroke-width="1"/>
+<line x1="125.0" y1="468.0" x2="0.0" y2="468.0" stroke="#d22" stroke-width="1"/>
+<line x1="63.0" y1="468.0" x2="63.0" y2="339.0" stroke="#d22" stroke-width="1"/>
+<line x1="125.0" y1="339.0" x2="0.0" y2="339.0" stroke="#d22" stroke-width="1"/>
+<line x1="0.0" y1="125.0" x2="125.0" y2="125.0" stroke="#d22" stroke-width="1"/>
+<line x1="63.0" y1="125.0" x2="63.0" y2="0.0" stroke="#d22" stroke-width="1"/>
+<line x1="439.0" y1="125.0" x2="564.0" y2="125.0" stroke="#d22" stroke-width="1"/>
+<line x1="501.0" y1="125.0" x2="501.0" y2="0.0" stroke="#d22" stroke-width="1"/>
+<line x1="564.0" y1="0.0" x2="564.0" y2="746.0" stroke="#d22" stroke-width="1"/>
+<line x1="431.0" y1="746.0" x2="431.0" y2="686.0" stroke="#d22" stroke-width="1"/>
+<line x1="431.0" y1="686.0" x2="439.0" y2="686.0" stroke="#d22" stroke-width="1"/>
+<line x1="439.0" y1="686.0" x2="439.0" y2="468.0" stroke="#d22" stroke-width="1"/>
+<line x1="439.0" y1="468.0" x2="564.0" y2="468.0" stroke="#d22" stroke-width="1"/>
+<line x1="501.0" y1="468.0" x2="501.0" y2="339.0" stroke="#d22" stroke-width="1"/>
+<line x1="439.0" y1="339.0" x2="564.0" y2="339.0" stroke="#d22" stroke-width="1"/>
+<line x1="133.0" y1="686.0" x2="133.0" y2="746.0" stroke="#d22" stroke-width="1"/>
+<line x1="0.0" y1="746.0" x2="600.0" y2="746.0" stroke="#d22" stroke-width="1"/>
+<text x="282.0" y="62.5" font-size="14" text-anchor="middle" font-family="sans-serif" fill="#333">FRONT</text>
+<text x="282.0" y="232.0" font-size="14" text-anchor="middle" font-family="sans-serif" fill="#333">BASE</text>
+<text x="282.0" y="403.5" font-size="14" text-anchor="middle" font-family="sans-serif" fill="#333">BACK</text>
+<text x="282.0" y="577.0" font-size="14" text-anchor="middle" font-family="sans-serif" fill="#333">LID</text>
+<text x="282.0" y="716.0" font-size="14" text-anchor="middle" font-family="sans-serif" fill="#333">TUCK</text>
+<text x="62.5" y="232.0" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#333">SIDE</text>
+<text x="501.5" y="232.0" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#333">SIDE</text>
+</svg>

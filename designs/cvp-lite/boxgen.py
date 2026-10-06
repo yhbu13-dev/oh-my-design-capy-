@@ -11,6 +11,9 @@ ears, lid and tuck), then writes:
   * G-code for a FluidNC/grblHAL flatbed cutter whose head carries four
     pneumatic tools: KX/KY = cutting wheels for lines along X/Y,
     CX/CY = creasing wheels for lines along X/Y
+  * with --former: a phase-2 forming-station recipe (axis set-points, glue
+    timing on the infeed belt, folding sequence) as G-code for a second
+    FluidNC board, see phase2/README.md
 
 Coordinates on the blank: x = feed direction (along the fanfold),
 y = across the fanfold, y = 0 is the reference edge of the board.
@@ -18,6 +21,7 @@ y = across the fanfold, y = 0 is the reference edge of the board.
 Usage:
   python3 boxgen.py 300 200 120                # item L W H in mm
   python3 boxgen.py 300 200 120 --board C --out out/order123
+  python3 boxgen.py 300 200 120 --former --fast   # phase 2 line
 """
 
 from __future__ import annotations
@@ -42,7 +46,25 @@ FEED_CREASE = 18000
 RAPID = 36000                           # mm/min used only for the time estimate
 TOOL_DWELL = 0.15                       # s, cylinder settle time after down/up
 ROLLER_FEED = 30000                     # mm/min on the A (feed roller) axis
+FAST = dict(FEED_CUT=36000, FEED_CREASE=36000, RAPID=60000, TOOL_DWELL=0.10)  # phase-2 cutter upgrade
 
+# ---------------------------------------------------------------- phase-2 former config
+# Former coordinates: origin = centre of the box base, +X = belt direction (back wall / lid
+# side), front wall on -X. The blank arrives tuck-first on the centre belt.
+FORMER_LIMITS = dict(x=(130, 520), y=(120, 520), h=(40, 300))  # base along X / across Y incl. t, wall h
+EAR_CLEAR = 45          # ears stop this far from the side paddle centre strip (|x| < 35)
+SENSOR_X = -900         # blank leading edge trips the infeed sensor here (belt A = 0)
+GUN_X = -860            # glue guns sit here; side guns ride the side beams, tuck gun is fixed
+GUN_SIDE_OFS = 15       # side guns fire this far outside the side crease
+TUCK_GUN_Y = 40         # tuck gun offset from the centre belt
+BELT_FEED = 30000       # mm/min
+HEAD_FEED = 48000       # mm/min, press head X (C axis)
+Z_FEED = 18000          # mm/min, press head Z
+EXIT_TRAVEL = 1000      # belt travel that carries the finished box onto the outfeed
+WIPER_OFS = 160         # tuck wiper sits this far in front (-X) of the press head centre
+PLOW_FRAC = 0.7         # plow edge meets the standing lid at 70 % of its length
+FORMER_OUT = {"SIDE_PADDLES": 0, "FRONT_PADDLES": 1, "BACK_PADDLES": 2, "EAR_FRONT": 3,
+              "EAR_BACK": 4, "TUCK_WIPER": 5, "GLUE_L": 6, "GLUE_R": 7, "GLUE_TUCK": 8}
 
 @dataclass
 class Op:
@@ -70,8 +92,9 @@ def clamp(v, lo, hi):
     return max(lo, min(hi, v))
 
 
-def plan_blank(L, W, H, board="C", clearance=5.0, widths=None, bed_max_x=BED_MAX_X):
-    """Pick fanfold width + orientation and lay out the blank. Raises ValueError if it won't fit."""
+def plan_blank(L, W, H, board="C", clearance=5.0, widths=None, bed_max_x=BED_MAX_X, former=False):
+    """Pick fanfold width + orientation and lay out the blank. Raises ValueError if it won't fit.
+    former=True also requires the box to fit the phase-2 forming station and shortens the ears."""
     t = BOARD_T[board]
     widths = sorted(widths or FANFOLD_WIDTHS)
     iL, iW, iH = L + 2 * clearance, W + 2 * clearance, H + clearance   # inner box size
@@ -89,6 +112,8 @@ def plan_blank(L, W, H, board="C", clearance=5.0, widths=None, bed_max_x=BED_MAX
         x_tot = x[-1]
         if x_tot > bed_max_x:
             continue
+        if former and not fits_former(along + t, across + t, h):
+            continue
         for F in widths:
             if y_tot <= F:
                 area = x_tot * F
@@ -96,20 +121,33 @@ def plan_blank(L, W, H, board="C", clearance=5.0, widths=None, bed_max_x=BED_MAX
                     best = dict(area=area, F=F, across=across, along=along, main=main,
                                 side=side, y_tot=y_tot, x=x, x_tot=x_tot, tuck=tuck)
                 break
+    if best is None and former:
+        lx, ly, lh = FORMER_LIMITS["x"], FORMER_LIMITS["y"], FORMER_LIMITS["h"]
+        raise ValueError(
+            f"item {L}x{W}x{H} is outside the forming station range (base {lx[0]}-{lx[1]} x "
+            f"{ly[0]}-{ly[1]} mm, wall {lh[0]}-{lh[1]} mm); fold this one by hand")
     if best is None:
         raise ValueError(
             f"item {L}x{W}x{H} needs a blank wider than {widths[-1]} mm or longer than "
             f"{bed_max_x} mm; split the order or use a bigger machine")
-    best.update(t=t, inner=(iL, iW, iH), board=board, h=h)
+    best.update(t=t, inner=(iL, iW, iH), board=board, h=h, former=former)
     best["ops"] = layout_ops(best)
     return best
+
+
+def fits_former(bx, by, h):
+    lim = FORMER_LIMITS
+    return (lim["x"][0] <= bx <= lim["x"][1] and lim["y"][0] <= by <= lim["y"][1]
+            and lim["h"][0] <= h <= lim["h"][1])
 
 
 def layout_ops(p):
     t, F, h = p["t"], p["F"], p["h"]
     x0, x1, x2, x3, x4, x5 = p["x"]
     yA, yB, yT = p["side"], p["side"] + p["main"], p["y_tot"]
-    ear = min(h, (p["along"] + t) / 2 - 2)        # glue ear width; two ears must not collide
+    # glue ear width: front and back ears must not collide; on the former they must also
+    # stay clear of the side paddle in the middle of each side wall
+    ear = min(h, (p["along"] + t) / 2 - (EAR_CLEAR if p["former"] else 2))
     tt = 2 * t                                     # tuck inset so it slides into the front wall
     ops = [
         # creases running across the board (constant x)
@@ -233,6 +271,98 @@ def svg(p, ops):
     return "\n".join(s) + "\n"
 
 
+def former_setpoints(p):
+    """Axis set-points for the forming station, in former coordinates (mm)."""
+    t, h, x = p["t"], p["h"], p["x"]
+    bx, by = p["along"] + t, p["main"]              # base size along X / across Y
+    xc = (x[1] + x[2]) / 2                           # base centre on the blank
+    lid = x[4] - x[3]
+    front, back = -bx / 2, bx / 2
+    return {
+        "X_end_paddles": round(bx / 2, 1),           # front/back paddle hinges at -X / +X
+        "Y_side_beams": round(by / 2, 1),            # side paddle hinges, ear plates, side guns at +-Y
+        "A_stop": round(x[5] - xc - SENSOR_X, 1),    # belt travel after the sensor trips
+        "B_fence": round(-(p["side"] + by / 2), 1),  # blank reference edge (y = 0)
+        # press head: parks behind the standing lid, plows it over, then presses and tucks
+        "C_head_park": round(back + h + lid + p["tuck"] + 60, 1),
+        "Z_plow": round(h + PLOW_FRAC * lid, 1),
+        "C_head_press": round(front - t - 6 + WIPER_OFS, 1),
+        "Z_press_hold": round(h + 2 * t, 1),
+        "Z_clear": round(h + 40, 1),
+        "ear_mm": round(p["ear"], 1),
+    }
+
+
+def glue_events(p):
+    """Belt positions (A) where each gun switches on/off. Guns are fixed in X, the blank moves."""
+    x, k = p["x"], p["tuck"]
+    def a_of(xb):
+        return GUN_X - SENSOR_X + (x[5] - xb)
+    beads = [  # (outputs, x_hi, x_lo) on the blank; the higher x passes the gun first
+        (("GLUE_TUCK",), x[4] + 0.7 * k, x[4] + 0.3 * k),
+        (("GLUE_L", "GLUE_R"), x[2] + 0.75 * (x[3] - x[2]), x[2] + 0.25 * (x[3] - x[2])),  # back ears
+        (("GLUE_L", "GLUE_R"), 0.75 * x[1], 0.25 * x[1]),                                # front ears
+    ]
+    return [(outs, a_of(hi), a_of(lo)) for outs, hi, lo in beads]
+
+
+def former_gcode(p):
+    s = former_setpoints(p)
+    o = FORMER_OUT
+    on = lambda *n: [f"M64 P{o[k]}" for k in n]
+    off = lambda *n: [f"M65 P{o[k]}" for k in n]
+    L = [
+        f"; CVP-Lite former recipe  base {p['along'] + p['t']:.0f} x {p['main']:.0f}  wall {p['h']:.0f} mm",
+        "; axes: X end-paddle screw, Y side-beam screws, Z press head, A belt, B fence, C press head X",
+        "G21 G90 G94",
+        f"G0 Z{s['Z_plow']}",
+        f"G0 X{s['X_end_paddles']} Y{s['Y_side_beams']} B{s['B_fence']} C{s['C_head_park']}",
+        "; host waits for the infeed sensor, then zeroes the belt",
+        "G92 A0",
+    ]
+    for outs, a_on, a_off in glue_events(p):
+        L.append(f"G1 A{a_on:.1f} F{BELT_FEED}")
+        L += [f"M62 P{o[n]}" for n in outs]
+        L.append(f"G1 A{a_off:.1f} F{BELT_FEED}")
+        L += [f"M63 P{o[n]}" for n in outs]
+    L += [
+        f"G1 A{s['A_stop']} F{BELT_FEED}",
+        "; operator places the item on the base, light curtain clears, cycle start",
+        "M0",
+        "; 1 walls up: sides first so the ears stand clear of them",
+        *on("SIDE_PADDLES"), "G4 P0.5",
+        *on("FRONT_PADDLES", "BACK_PADDLES"), "G4 P0.5",
+        "; 2 ear plates sweep in from both ends and stay as clamps",
+        *on("EAR_FRONT", "EAR_BACK"), "G4 P0.9",
+        "; 3 drop side and front paddles; back paddle keeps the lid standing",
+        *off("SIDE_PADDLES", "FRONT_PADDLES"), "G4 P0.3",
+        "; 4 plow the lid over with the head's leading edge",
+        f"G1 C{s['C_head_press']} F{HEAD_FEED}",
+        *off("BACK_PADDLES"), "G4 P0.3",
+        "; 5 press the lid flat, wipe the tuck down onto the front wall, hold for the glue",
+        f"G1 Z{s['Z_press_hold']} F{Z_FEED}",
+        *on("TUCK_WIPER"), "G4 P1.5", *off("TUCK_WIPER"), "G4 P0.3",
+        "; 6 release and send the box out under the raised head",
+        f"G0 Z{s['Z_clear']}",
+        *off("EAR_FRONT", "EAR_BACK"), "G4 P0.8",
+        f"G91 G1 A{EXIT_TRAVEL} F{BELT_FEED}", "G90",
+        f"G0 Z{s['Z_plow']}", f"G0 C{s['C_head_park']}",
+        "M2",
+    ]
+    return "\n".join(L) + "\n"
+
+
+def former_seconds(p):
+    """Item-to-item time at the former. The head's return overlaps the next infeed."""
+    s = former_setpoints(p)
+    belt = (s["A_stop"] + EXIT_TRAVEL) / (BELT_FEED / 60) * 1.2
+    place = 3.0                                    # operator puts the item down
+    dwell = 0.5 + 0.5 + 0.9 + 0.3 + 0.3 + 1.5 + 0.3 + 0.8
+    head = (s["C_head_park"] - s["C_head_press"]) / (HEAD_FEED / 60) * 1.3
+    z = (s["Z_plow"] - s["Z_press_hold"] + s["Z_clear"] - s["Z_press_hold"]) / (Z_FEED / 60) * 1.3
+    return belt + place + dwell + head + z
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("L", type=float), ap.add_argument("W", type=float), ap.add_argument("H", type=float)
@@ -240,9 +370,13 @@ def main():
     ap.add_argument("--clearance", type=float, default=5.0)
     ap.add_argument("--widths", type=int, nargs="*", default=FANFOLD_WIDTHS)
     ap.add_argument("--out", default="out/blank")
+    ap.add_argument("--former", action="store_true", help="phase 2: plan for the forming station")
+    ap.add_argument("--fast", action="store_true", help="phase 2 cutter speeds (600 mm/s cut)")
     a = ap.parse_args()
+    if a.fast:
+        globals().update(FAST)
 
-    p = plan_blank(a.L, a.W, a.H, a.board, a.clearance, a.widths)
+    p = plan_blank(a.L, a.W, a.H, a.board, a.clearance, a.widths, former=a.former)
     ops = order_ops(p["ops"])
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -263,6 +397,13 @@ def main():
         "est_cycle_s": round(estimate_seconds(p, ops), 1),
         "files": [str(out.with_suffix(".gcode")), str(out.with_suffix(".svg"))],
     }
+    if a.former:
+        out.with_suffix(".former.gcode").write_text(former_gcode(p))
+        cut_s, form_s = summary["est_cycle_s"], former_seconds(p)
+        summary["former"] = former_setpoints(p)
+        summary["former"]["est_cycle_s"] = round(form_s, 1)
+        summary["line_boxes_per_hour"] = round(3600 / max(cut_s, form_s))
+        summary["files"].append(str(out.with_suffix(".former.gcode")))
     print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
