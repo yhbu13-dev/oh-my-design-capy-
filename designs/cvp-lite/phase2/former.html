@@ -125,7 +125,7 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
     <p>재단기가 자른 전개도를 받아 물건을 감싸 접고 뚜껑까지 닫는 스테이션입니다. 작업자는 물건을 바닥면에 올리기만 합니다. 측벽과 앞뒤 벽은 벽 가운데의 패들이 세우고, 귀는 바깥에서 쓸고 들어오는 판이 붙입니다. 뚜껑은 위쪽 프레스 헤드의 앞날이 밀어 넘긴 뒤 눌러 줍니다.</p>
   </div>
   <div class="meta">
-    <div><span class="label">성형 사이클</span><b>15–17 s</b></div>
+    <div><span class="label">성형 사이클</span><b>14–16 s</b></div>
     <div><span class="label">라인 처리량</span><b>110–230 box/h</b></div>
     <div><span class="label">축 / 밸브</span><b>6축 FluidNC / 9출력</b></div>
     <div><span class="label">추가 예산</span><b>약 1,700만 원</b></div>
@@ -152,7 +152,7 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
     <div class="notes">
       <h3>축 셋포인트</h3>
       <div class="chips" id="chips"></div>
-      <p class="foot">원점은 바닥면 중심, +X는 벨트 진행 방향(뒷벽·뚜껑 쪽)입니다. 전개도는 턱이 먼저 들어옵니다. 재단 시간은 고속 개조(600 mm/s) 기준이고, 라인 처리량은 재단과 성형 중 느린 쪽으로 정해집니다.</p>
+      <p class="foot">원점은 바닥면 중심, +X는 벨트 진행 방향(앞벽 쪽)입니다. 재단기는 원단에 붙은 턱 쪽을 마지막에 자르므로 전개도는 앞벽이 먼저 들어옵니다. 최소 크기보다 작은 물건은 박스를 최소 크기로 키워서 처리합니다. 재단 시간은 고속 개조(600 mm/s) 기준이고, 라인 처리량은 재단과 성형 중 느린 쪽으로 정해집니다.</p>
     </div>
   </div>
   <div class="frames" id="frames"></div>
@@ -168,7 +168,7 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
 <section class="sheet" id="timing">
   <header><span class="no">F-03</span><h2>사이클 타이밍</h2></header>
   <div class="diagram gantt" id="gantt"></div>
-  <p class="foot">헤드가 대기 위치로 돌아가는 동작은 다음 전개도의 진입과 겹치므로 사이클에 넣지 않았습니다. 앞귀는 접착 후 약 5초, 턱은 약 10초 뒤에 붙습니다. 열린 시간이 12–15초 이상인 핫멜트를 쓰세요.</p>
+  <p class="foot">헤드가 대기 위치로 돌아가는 동작은 다음 전개도의 진입과 겹치므로 사이클에 넣지 않았습니다. 접착부터 접힐 때까지 귀는 약 7초, 턱은 약 8초가 걸립니다. 열린 시간이 10초 이상인 핫멜트를 쓰세요.</p>
 </section>
 
 <section class="sheet" id="mech">
@@ -187,7 +187,7 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
       <h3>귀 판, 헤드, 접착</h3>
       <ul>
         <li><b>귀 판 4개</b>: UHMW 10 mm, 250×290, 바닥이 작업면 위 12 mm. 뒤에 스펀지 10 mm, 앞끝 R10. 로드리스 실린더 Ø25×550. 대기 시 앞끝 X = ∓565, 끝까지 가면 ∓45에서 멈추고 클램프로 남습니다.</li>
-        <li><b>프레스 헤드</b>: X 리니어 모듈 1.5 m(C축) + Z 볼스크루 1 m. 폭 80 mm, 판 80×300(스펀지 5 mm), −X 앞날은 R15 둥근 바. 턱 와이퍼는 중심에서 −160 mm, Ø20×100 실린더 + 폭 40 우레탄 롤러.</li>
+        <li><b>프레스 헤드</b>: X 리니어 모듈 1.5 m(C축) + Z 볼스크루 1 m. 폭 80 mm, 판 80×300(스펀지 5 mm), +X 앞날은 R15 둥근 바. 턱 와이퍼는 중심에서 +160 mm, Ø20×100 실린더 + 폭 40 우레탄 롤러.</li>
         <li><b>핫멜트</b>: 멜터 3–5 L, 가열 호스 3개, 건 3개. 측면 건 2개는 측면빔에 달려 Y를 따라가고(괘선 바깥 15 mm), 턱 건은 Y = +40 고정. 세 건 모두 X = −860.</li>
         <li><b>안전</b>: 작업자 쪽 타입 4 라이트커튼 → FluidNC safety door + 덤프밸브. 사이클 시작은 커튼이 빈 상태의 발판 스위치로만 겁니다.</li>
       </ul>
@@ -263,13 +263,16 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
   function plan(L, W, H, board, c) {
     const t = T[board], iL = L + 2 * c, iW = W + 2 * c, h = H + c;
     let best = null;
-    for (const [across, along] of [[iL, iW], [iW, iL]]) {
-      const main = across + t, side = h, yTot = main + 2 * side;
-      const tuck = Math.min(clamp(0.6 * h, 20, 60), Math.max(h - 5, 10));
+    for (let [across, along] of [[iL, iW], [iW, iL]]) {
+      // below the station minimum the box is grown up to it
+      along = Math.max(along, LIM.x[0] - t); across = Math.max(across, LIM.y[0] - t);
+      const hh = Math.max(h, LIM.h[0]);
+      const main = across + t, side = hh, yTot = main + 2 * side;
+      const tuck = Math.min(clamp(0.6 * hh, 20, 60), Math.max(hh - 5, 10));
       const x = [0];
-      for (const q of [h, along + t, h + t, along + 2 * t, tuck]) x.push(x[x.length - 1] + q);
-      if (x[5] > BED || !fits(along + t, main, h)) continue;
-      for (const F of WIDTHS) if (yTot <= F) { if (!best || x[5] * F < best.x[5] * best.F) best = { F, across, along, main, side, yTot, x, tuck, t, h }; break; }
+      for (const q of [hh, along + t, hh + t, along + 2 * t, tuck]) x.push(x[x.length - 1] + q);
+      if (x[5] > BED || !fits(along + t, main, hh)) continue;
+      for (const F of WIDTHS) if (yTot <= F) { if (!best || x[5] * F < best.x[5] * best.F) best = { F, across, along, main, side, yTot, x, tuck, t, h: hh }; break; }
     }
     if (!best) return null;
     best.ear = Math.min(best.h, (best.along + best.t) / 2 - 45);
@@ -311,8 +314,8 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
     const { t, h, x } = p, bx = p.along + t, by = p.main, xc = (x[1] + x[2]) / 2, lid = x[4] - x[3];
     return {
       bx, by, lid, xc,
-      X: bx / 2, Y: by / 2, A: x[5] - xc - SENSOR_X, B: -(p.side + by / 2),
-      Cpark: bx / 2 + h + lid + p.tuck + 60, Zplow: h + 0.7 * lid, Cpress: -bx / 2 - t - 6 + WIPER,
+      X: bx / 2, Y: by / 2, A: xc - SENSOR_X, B: -(p.side + by / 2),
+      Cpark: -(bx / 2 + h + lid + p.tuck + 60), Zplow: h + 0.7 * lid, Cpress: bx / 2 + t + 6 - WIPER,
       Zhold: h + 2 * t, Zclear: h + 40,
     };
   }
@@ -322,7 +325,7 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
     add('전개도 진입 + 접착', s.A / BELT * 1.2, 'belt');
     add('물건 올림 (작업자)', 3.0, 'op');
     add('측패들 올림', 0.5, 'air'); add('앞뒤 패들 올림', 0.5, 'air'); add('귀 판 쓸기', 0.9, 'air'); add('측·앞패들 내림', 0.3, 'air');
-    add('헤드가 뚜껑 넘김', (s.Cpark - s.Cpress) / HEAD * 1.3, 'axis'); add('뒷패들 내림', 0.3, 'air');
+    add('헤드가 뚜껑 넘김', Math.abs(s.Cpark - s.Cpress) / HEAD * 1.3, 'axis'); add('뒷패들 내림', 0.3, 'air');
     add('헤드 하강·압착', (s.Zplow - s.Zhold) / ZV * 1.3, 'axis'); add('턱 와이퍼 + 유지', 1.8, 'air');
     add('헤드 상승·귀 판 복귀', (s.Zclear - s.Zhold) / ZV * 1.3 + 0.8, 'axis');
     add('배출', EXIT / BELT * 1.2, 'belt');
@@ -333,21 +336,24 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
   const C = { kraft: 'var(--kraft)', edge: 'var(--kraft-edge)', ink: 'var(--ink)', muted: 'var(--muted)', cut: 'var(--cut)', crease: 'var(--crease)', acc: 'var(--accent)', rule: 'var(--rule)' };
 
   // X-Z section frames
+  // Drawn in a local frame with the lid on +x, then mirrored so the page matches the
+  // former (front wall on +X, belt running left to right).
   function frame(p, s, k) {
     const h = p.h, t = p.t, bx = s.bx, lid = s.lid, K = p.tuck, F = -bx / 2, Bk = bx / 2;
-    const itemW = p.along - 10, itemH = h - 5, shift = k === 5 ? 420 : 0;
-    const xmin = F - h - 80, xmax = s.Cpark + 220, zmax = Math.max(h + lid + K, s.Zplow + 60, 360) + 50, zmin = -40;
+    const oPark = -s.Cpark, oPress = -s.Cpress;
+    const itemW = p.along - 10, itemH = h - 5, shift = k === 5 ? -420 : 0;
+    const xmin = F - h - 520, xmax = oPark + 220, zmax = Math.max(h + lid + K, s.Zplow + 60, 360) + 50, zmin = -40;
     const W = xmax - xmin, Hh = zmax - zmin, sw = W / 420;
-    const X = v => v - xmin, Z = v => zmax - v;
+    const X = v => xmax - v, Z = v => zmax - v;
     let g = `<svg viewBox="0 0 ${W} ${Hh}" role="img">`;
     g += `<line x1="0" y1="${Z(0)}" x2="${W}" y2="${Z(0)}" stroke="${C.rule}" stroke-width="${sw * 2}"/>`;
-    g += `<rect x="${X(-20)}" y="${Z(0)}" width="40" height="${sw * 8}" fill="${C.muted}" opacity=".5"/>`;
+    g += `<rect x="${X(20)}" y="${Z(0)}" width="40" height="${sw * 8}" fill="${C.muted}" opacity=".5"/>`;
     const seg = (pts, col = C.edge, wd = 3.2) => `<polyline points="${pts.map(([a, b]) => X(a + shift) + ',' + Z(b)).join(' ')}" fill="none" stroke="${col}" stroke-width="${sw * wd}" stroke-linejoin="round" stroke-linecap="round"/>`;
-    const paddle = (x0, up, dir) => up ? `<line x1="${X(x0 + dir * 6)}" y1="${Z(0)}" x2="${X(x0 + dir * 6)}" y2="${Z(320)}" stroke="${C.muted}" stroke-width="${sw * 3}"/>` : `<line x1="${X(x0)}" y1="${Z(-3)}" x2="${X(x0 + dir * 320)}" y2="${Z(-3)}" stroke="${C.muted}" stroke-width="${sw * 3}"/>`;
+    const paddle = (x0, up, dir) => up ? `<line x1="${X(x0 + dir * 6 + shift)}" y1="${Z(0)}" x2="${X(x0 + dir * 6 + shift)}" y2="${Z(320)}" stroke="${C.muted}" stroke-width="${sw * 3}"/>` : `<line x1="${X(x0)}" y1="${Z(-3)}" x2="${X(x0 + dir * 320)}" y2="${Z(-3)}" stroke="${C.muted}" stroke-width="${sw * 3}"/>`;
     // item
-    const item = `<rect x="${X(-itemW / 2 + shift)}" y="${Z(itemH + t)}" width="${itemW}" height="${itemH}" fill="${C.acc}" opacity=".22" stroke="${C.acc}" stroke-width="${sw}"/>`;
+    const item = `<rect x="${X(itemW / 2 + shift)}" y="${Z(itemH + t)}" width="${itemW}" height="${itemH}" fill="${C.acc}" opacity=".22" stroke="${C.acc}" stroke-width="${sw}"/>`;
     // board shapes
-    let board, frontUp = false, backUp = false, headX = s.Cpark, headZ = s.Zplow, wiper = false;
+    let board, frontUp = false, backUp = false, headX = oPark, headZ = s.Zplow, wiper = false;
     if (k === 1) {
       board = seg([[F - h, 0], [F, 0], [Bk, 0], [Bk + h + t, 0], [Bk + h + t + lid, 0], [Bk + h + t + lid + K, 0]]);
     } else if (k === 2) {
@@ -359,38 +365,38 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
       headX = Bk + ux * (lid + K) + 150 + 12;   // plow edge just past the lid tip
       board = seg([[F, h], [F, 0], [Bk, 0], [Bk, h], [Bk + ux * lid, h + uz * lid], [Bk + ux * (lid + K), h + uz * (lid + K)]]);
     } else {
-      headX = s.Cpress; headZ = k === 4 ? s.Zhold : s.Zclear; wiper = k === 4;
+      headX = oPress; headZ = k === 4 ? s.Zhold : s.Zclear; wiper = k === 4;
       board = seg([[F - t, h - K], [F - t, h + t], [F, h + t], [Bk, h + t], [Bk, 0], [F, 0], [F, h]]);
     }
     g += paddle(F, frontUp, -1) + paddle(Bk, backUp, 1) + item + board;
-    // head: plate 300 long centred at headX, bottom at headZ; plow edge at -X end
-    const hx = k === 5 ? s.Cpress : headX;
-    g += `<rect x="${X(hx - 150)}" y="${Z(headZ + 30)}" width="300" height="30" fill="var(--sheet)" stroke="${C.ink}" stroke-width="${sw * 1.4}"/>`;
+    // head: plate 300 long centred at headX, bottom at headZ; plow edge at the local -x end
+    const hx = k === 5 ? oPress : headX;
+    g += `<rect x="${X(hx + 150)}" y="${Z(headZ + 30)}" width="300" height="30" fill="var(--sheet)" stroke="${C.ink}" stroke-width="${sw * 1.4}"/>`;
     g += `<line x1="${X(hx)}" y1="${Z(headZ + 30)}" x2="${X(hx)}" y2="0" stroke="${C.ink}" stroke-width="${sw * 2}" stroke-dasharray="${sw * 6} ${sw * 4}"/>`;
     g += `<circle cx="${X(hx - 150)}" cy="${Z(headZ + 15)}" r="15" fill="${C.ink}"/>`;
     const wz = wiper ? h - K / 2 : headZ + 10;
     g += `<line x1="${X(hx - WIPER)}" y1="${Z(headZ + 30)}" x2="${X(hx - WIPER)}" y2="${Z(wz)}" stroke="${C.cut}" stroke-width="${sw * 3}"/><circle cx="${X(hx - WIPER)}" cy="${Z(wz)}" r="${sw * 7}" fill="${C.cut}"/>`;
-    if (k === 5) g += `<text x="${X(Bk + 440)}" y="${Z(h / 2)}" font-size="${sw * 13}">→ 출고</text>`;
+    if (k === 5) g += `<text x="${X(F - 440)}" y="${Z(h / 2)}" font-size="${sw * 13}">→ 출고</text>`;
     return g + '</svg>';
   }
 
   function planView(p, s) {
-    const xmin = -1000, xmax = 1300, ymin = -680, ymax = 680, W = xmax - xmin, H = ymax - ymin, sw = W / 640;
+    const xmin = -1300, xmax = 1100, ymin = -680, ymax = 680, W = xmax - xmin, H = ymax - ymin, sw = W / 640;
     const X = v => v - xmin, Y = v => ymax - v;   // +Y up on the page
     let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="성형대 평면도">`;
-    g += `<rect x="${X(-980)}" y="${Y(600)}" width="2260" height="1200" fill="var(--paper)" stroke="${C.rule}" stroke-width="${sw}"/>`;
+    g += `<rect x="${X(-1280)}" y="${Y(600)}" width="2360" height="1200" fill="var(--paper)" stroke="${C.rule}" stroke-width="${sw}"/>`;
     // slots
-    g += `<rect x="${X(-1000)}" y="${Y(22)}" width="${W}" height="44" fill="${C.muted}" opacity=".18"/>`;
+    g += `<rect x="${X(-1300)}" y="${Y(22)}" width="${W}" height="44" fill="${C.muted}" opacity=".18"/>`;
     for (const yy of [23, -53]) g += `<rect x="${X(-700)}" y="${Y(yy + 30)}" width="1400" height="30" fill="${C.muted}" opacity=".10"/>`;
     g += `<rect x="${X(-35)}" y="${Y(560)}" width="70" height="1120" fill="${C.muted}" opacity=".10"/>`;
     // blank outline at stop
-    const yA = p.side, yB = p.side + p.main, x = p.x, tt = 2 * p.t, e = p.ear, ox = -s.xc, oy = -(yA + p.main / 2);
+    const yA = p.side, yB = p.side + p.main, x = p.x, tt = 2 * p.t, e = p.ear, oy = -(yA + p.main / 2);
     const poly = [[0, yA - e], [x[1], yA - e], [x[1], 0], [x[2], 0], [x[2], yA - e], [x[3], yA - e], [x[3], yA], [x[4], yA], [x[4], yA + tt], [x[5], yA + tt],
       [x[5], yB - tt], [x[4], yB - tt], [x[4], yB], [x[3], yB], [x[3], yB + e], [x[2], yB + e], [x[2], p.yTot], [x[1], p.yTot], [x[1], yB + e], [0, yB + e]];
-    g += `<polygon points="${poly.map(([a, b]) => X(a + ox) + ',' + Y(b + oy)).join(' ')}" fill="${C.kraft}" opacity=".6" stroke="${C.cut}" stroke-width="${sw * 1.6}"/>`;
+    g += `<polygon points="${poly.map(([a, b]) => X(s.xc - a) + ',' + Y(b + oy)).join(' ')}" fill="${C.kraft}" opacity=".6" stroke="${C.cut}" stroke-width="${sw * 1.6}"/>`;
     for (const o of p.ops.filter(o => o.kind === 'crease')) {
       const [[a1, b1], [a2, b2]] = ends(o);
-      g += `<line x1="${X(a1 + ox)}" y1="${Y(b1 + oy)}" x2="${X(a2 + ox)}" y2="${Y(b2 + oy)}" stroke="${C.crease}" stroke-width="${sw * 1.4}" stroke-dasharray="${sw * 6} ${sw * 4}"/>`;
+      g += `<line x1="${X(s.xc - a1)}" y1="${Y(b1 + oy)}" x2="${X(s.xc - a2)}" y2="${Y(b2 + oy)}" stroke="${C.crease}" stroke-width="${sw * 1.4}" stroke-dasharray="${sw * 6} ${sw * 4}"/>`;
     }
     // side beams and ear plates (parked)
     for (const sg of [1, -1]) {
@@ -406,15 +412,15 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
     // head parked
     g += `<rect x="${X(s.Cpark - 150)}" y="${Y(40)}" width="300" height="80" fill="var(--sheet)" stroke="${C.ink}" stroke-width="${sw * 1.6}"/>`;
     // fence
-    g += `<line x1="${X(-1000)}" y1="${Y(s.B)}" x2="${X(-700)}" y2="${Y(s.B)}" stroke="${C.ink}" stroke-width="${sw * 4}"/>`;
+    g += `<line x1="${X(-1280)}" y1="${Y(s.B)}" x2="${X(-950)}" y2="${Y(s.B)}" stroke="${C.ink}" stroke-width="${sw * 4}"/>`;
     const fs = sw * 11, lab = (tx, x0, y0, anchor = 'start') => `<text x="${X(x0)}" y="${Y(y0)}" font-size="${fs}" text-anchor="${anchor}">${tx}</text>`;
     g += lab('접착건 L·R·턱', GUN_X - 20, -s.Y - 60);
     g += lab('귀 판 대기', -690, s.Y + p.t + 40, 'middle') + lab('귀 판 대기', 690, s.Y + p.t + 40, 'middle');
     g += lab('헤드 대기', s.Cpark, 70, 'middle');
-    g += lab('펜스', -990, s.B - 40);
+    g += lab('펜스', -1270, s.B - 40);
     g += lab('가운데 벨트 →', 700, -60);
     g += lab('측패들 (x = 0)', 45, -s.Y - 110);
-    g += lab('작업자 쪽 · 라이트커튼', -980, -640);
+    g += lab('작업자 쪽 · 라이트커튼', -1270, -640);
     return g + '</svg>';
   }
 
@@ -438,7 +444,7 @@ input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid 
     const fail = msg => { $('out').innerHTML = `<div class="err" style="grid-column:1/-1">${msg}</div>`; ['chips', 'frames', 'planbox', 'gantt'].forEach(id => $(id).innerHTML = ''); };
     if (![L, W, H].every(n => n > 0)) return fail('L, W, H에 0보다 큰 숫자를 넣으세요.');
     const p = plan(L, W, H, board, 5);
-    if (!p) return fail('성형대 범위(바닥 130–520 × 120–520 mm, 벽 40–300 mm) 밖이거나 재단기에 들어가지 않는 크기입니다. 이 박스는 1단계처럼 손으로 접으세요.');
+    if (!p) return fail('성형대 최대 범위(바닥 520 × 520 mm, 벽 300 mm)나 재단기 베드를 넘는 크기입니다. 이 박스는 손으로 포장하세요.');
     const s = setpoints(p), steps = timeline(p, s), form = steps[steps.length - 1].end, cut = cutSeconds(p), bph = 3600 / Math.max(form, cut);
     const cells = [['바닥 (X × Y)', fmt(s.bx) + ' × ' + fmt(s.by)], ['벽 높이 / 귀 폭', fmt(p.h) + ' / ' + fmt(p.ear) + ' mm'],
       ['재단 (고속)', cut.toFixed(1) + ' s'], ['성형', form.toFixed(1) + ' s'],

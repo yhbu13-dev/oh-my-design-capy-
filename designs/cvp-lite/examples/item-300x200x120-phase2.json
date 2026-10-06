@@ -33,15 +33,15 @@
   "former": {
     "X_end_paddles": 107.0,
     "Y_side_beams": 157.0,
-    "A_stop": 1414.0,
+    "A_stop": 1132.0,
     "B_fence": -282.0,
-    "C_head_park": 570.0,
+    "C_head_park": -570.0,
     "Z_plow": 277.6,
-    "C_head_press": 43.0,
+    "C_head_press": -43.0,
     "Z_press_hold": 133.0,
     "Z_clear": 165.0,
     "ear_mm": 62.0,
-    "est_cycle_s": 15.5
+    "est_cycle_s": 14.8
   },
   "line_boxes_per_hour": 171
 }

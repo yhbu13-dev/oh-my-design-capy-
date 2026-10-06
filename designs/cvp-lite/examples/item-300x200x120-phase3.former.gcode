@@ -1,8 +1,8 @@
-; CVP-Lite former recipe  base 214 x 314  wall 125 mm
+; CVP-Lite former recipe  base 314 x 214  wall 125 mm
 ; axes: X end-paddle screw, Y side-beam screws, Z press head, A belt, B fence, C press head X
 G21 G90 G94
-G0 Z277.6
-G0 X107.0 Y157.0 B-282.0 C-570.0
+G0 Z347.6
+G0 X157.0 Y107.0 B-232.0 C-720.0
 ; host waits for the infeed sensor, then zeroes the belt
 G92 A0
 G1 A71.2 F30000
@@ -11,17 +11,17 @@ M62 P7
 G1 A133.8 F30000
 M63 P6
 M63 P7
-G1 A411.2 F30000
+G1 A511.2 F30000
 M62 P6
 M62 P7
-G1 A475.8 F30000
+G1 A575.8 F30000
 M63 P6
 M63 P7
-G1 A744.0 F30000
+G1 A944.0 F30000
 M62 P8
-G1 A768.0 F30000
+G1 A968.0 F30000
 M63 P8
-G1 A1132.0 F30000
+G1 A1182.0 F30000
 ; operator places the item on the base, light curtain clears, cycle start
 M0
 ; 1 walls up: sides first so the ears stand clear of them
@@ -39,7 +39,7 @@ M65 P0
 M65 P1
 G4 P0.3
 ; 4 plow the lid over towards +X with the head's leading edge
-G1 C-43.0 F48000
+G1 C7.0 F48000
 M65 P2
 G4 P0.3
 ; 5 press the lid flat, wipe the tuck down onto the front wall, hold for the glue
@@ -55,6 +55,6 @@ M65 P4
 G4 P0.8
 G91 G1 A1000 F30000
 G90
-G0 Z277.6
-G0 C-570.0
+G0 Z347.6
+G0 C-720.0
 M2

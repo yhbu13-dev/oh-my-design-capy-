@@ -1,0 +1,131 @@
+{
+  "orders": 2000,
+  "seed": 1,
+  "results": {
+    "A  1 cutter + 1 former": {
+      "boxes_per_hour": 110,
+      "bottleneck": "cutters",
+      "utilisation": {
+        "induct": 0.12,
+        "cutters": [
+          1.0
+        ],
+        "formers": [
+          0.43
+        ],
+        "label": 0.15
+      },
+      "automated": 1983,
+      "manual_lane": 17,
+      "board_yield_pct": 51.9,
+      "board_m2_per_box": 0.882
+    },
+    "B  2 cutters + 1 former": {
+      "boxes_per_hour": 235,
+      "bottleneck": "cutters",
+      "utilisation": {
+        "induct": 0.26,
+        "cutters": [
+          1.0,
+          1.0
+        ],
+        "formers": [
+          0.91
+        ],
+        "label": 0.33
+      },
+      "automated": 1983,
+      "manual_lane": 17,
+      "board_yield_pct": 57.6,
+      "board_m2_per_box": 0.795
+    },
+    "C  3 cutters + 2 formers": {
+      "boxes_per_hour": 371,
+      "bottleneck": "cutters",
+      "utilisation": {
+        "induct": 0.41,
+        "cutters": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "formers": [
+          0.72,
+          0.71
+        ],
+        "label": 0.52
+      },
+      "automated": 1983,
+      "manual_lane": 17,
+      "board_yield_pct": 64.5,
+      "board_m2_per_box": 0.71
+    },
+    "D  4 cutters + 2 formers": {
+      "boxes_per_hour": 493,
+      "bottleneck": "cutters",
+      "utilisation": {
+        "induct": 0.55,
+        "cutters": [
+          0.99,
+          0.99,
+          0.99,
+          0.99
+        ],
+        "formers": [
+          0.95,
+          0.95
+        ],
+        "label": 0.69
+      },
+      "automated": 1983,
+      "manual_lane": 17,
+      "board_yield_pct": 68.6,
+      "board_m2_per_box": 0.667
+    },
+    "D' 4 cutters, all 1000 mm": {
+      "boxes_per_hour": 440,
+      "bottleneck": "cutters",
+      "utilisation": {
+        "induct": 0.49,
+        "cutters": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "formers": [
+          0.84,
+          0.85
+        ],
+        "label": 0.61
+      },
+      "automated": 1983,
+      "manual_lane": 17,
+      "board_yield_pct": 51.9,
+      "board_m2_per_box": 0.882
+    },
+    "E  5 cutters + 2 formers": {
+      "boxes_per_hour": 519,
+      "bottleneck": "formers",
+      "utilisation": {
+        "induct": 0.57,
+        "cutters": [
+          0.83,
+          0.83,
+          0.83,
+          0.83,
+          0.83
+        ],
+        "formers": [
+          1.0,
+          1.0
+        ],
+        "label": 0.72
+      },
+      "automated": 1983,
+      "manual_lane": 17,
+      "board_yield_pct": 64.3,
+      "board_m2_per_box": 0.712
+    }
+  }
+}
