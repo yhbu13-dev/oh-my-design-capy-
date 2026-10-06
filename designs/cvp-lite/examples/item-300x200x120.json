@@ -1,0 +1,32 @@
+{
+  "item_mm": [
+    300.0,
+    200.0,
+    120.0
+  ],
+  "box_inner_mm": [
+    310.0,
+    210.0,
+    125.0
+  ],
+  "board": "C",
+  "fanfold_width_mm": 600,
+  "blank_mm": [
+    746.0,
+    564.0
+  ],
+  "board_used_m2": 0.448,
+  "blank_m2": 0.421,
+  "yield_pct": 94.0,
+  "ops": {
+    "cuts": 18,
+    "creases": 6
+  },
+  "cut_length_m": 3.18,
+  "crease_length_m": 2.18,
+  "est_cycle_s": 35.7,
+  "files": [
+    "examples/item-300x200x120.gcode",
+    "examples/item-300x200x120.svg"
+  ]
+}
