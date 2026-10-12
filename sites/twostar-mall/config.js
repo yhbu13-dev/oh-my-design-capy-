@@ -6,6 +6,8 @@ window.STORE_CONFIG = {
   shippingFee: 3000,
   // 일정 금액 이상 무료배송 정책이 있으면 금액을 넣으세요 (예: 50000). 없으면 null.
   freeShippingOver: null,
+  // 오늘 출발 마감 시각 (한국 시간). twostar.net 상품 페이지의 '오늘 출발' 카운트다운 기준. 끄려면 "".
+  todayShipCutoff: "23:00",
   // 결제 수단 노출 순서. 첫 번째가 기본 선택.
   payMethods: [
     { id: "naverpay", label: "네이버페이" },

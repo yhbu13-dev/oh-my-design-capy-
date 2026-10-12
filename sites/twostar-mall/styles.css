@@ -12,6 +12,11 @@
   --ok: #0f7b52;
   --warn: #c2410c;
   --scrim: rgba(12, 16, 22, .48);
+  /* 기획전 배너 색 — 음료 포장 같은 단색 블록 (두 테마 공통) */
+  --p-navy: #0d2742; --p-navy-can: #1f4f86; --p-navy-lid: #2e66a8;
+  --p-blue: #1769e0; --p-blue-can: #4d8ff0; --p-blue-lid: #7aaef7;
+  --p-sun: #ffc533; --p-sun-can: #f0a800; --p-sun-lid: #ffd76b;
+  --p-red: #e2412f; --p-red-can: #f06a56; --p-red-lid: #f8957f;
   --font: "Pretendard Variable", Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --r: 8px;
   color-scheme: light;
@@ -48,7 +53,22 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 /* ---------- 상단 ---------- */
 .masthead { max-width: 1280px; margin: 0 auto; padding: 14px 16px 10px; }
 .masthead__row { display: flex; align-items: center; gap: 12px; }
-.wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.04em; color: var(--ink); text-decoration: none; }
+.wordmark { display: inline-flex; align-items: center; gap: 6px; font-size: 22px; font-weight: 800; letter-spacing: -0.045em; color: var(--ink); text-decoration: none; }
+.mark { width: 34px; height: 21px; stroke: none; }
+.mark__a { fill: var(--navy); }
+.mark__b { fill: var(--blue); mix-blend-mode: multiply; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mark__b { mix-blend-mode: normal; } }
+:root[data-theme="dark"] .mark__b { mix-blend-mode: normal; }
+
+/* 상단 띠: 오늘 출발 */
+.strip { background: var(--p-navy); color: #dfe7f2; font-size: 12px; }
+.strip__in { max-width: 1280px; margin: 0 auto; padding: 7px 16px; display: flex; justify-content: space-between; gap: 12px; }
+.strip p { margin: 0; white-space: nowrap; }
+.strip b { color: #fff; font-weight: 700; margin: 0 2px; }
+.strip__dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; margin-right: 7px; vertical-align: 1px; box-shadow: 0 0 0 3px rgba(74, 222, 128, .2); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); } }
+.strip__cs { color: #9fb0c7; }
+@media (max-width: 420px) { .strip__cs { display: none; } }
 .masthead__tag { margin: 0; flex: 1; font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-link { position: relative; border: 0; background: none; width: 40px; height: 40px; margin-right: -8px; display: grid; place-items: center; }
 .cart-link__n { position: absolute; top: 3px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
@@ -71,6 +91,32 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 
 /* ---------- 진열 ---------- */
 .shelf { max-width: 1280px; margin: 0 auto; padding: 0 16px 24px; }
+/* 기획전 배너 */
+.promos { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(78%, 1fr); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 16px -16px 4px; padding: 0 16px; scroll-padding: 0 16px; }
+.promos::-webkit-scrollbar { display: none; }
+.promos:empty { display: none; }
+@media (min-width: 720px) { .promos { grid-auto-columns: minmax(300px, 1fr); } }
+@media (min-width: 1100px) { .promos { grid-auto-flow: row; grid-template-columns: repeat(4, 1fr); overflow: visible; margin-inline: 0; padding: 0; } }
+.promo { position: relative; scroll-snap-align: start; border: 0; border-radius: 12px; overflow: hidden; min-height: 156px; padding: 18px 18px 16px; text-align: left; display: flex; isolation: isolate; transition: transform .2s ease; }
+@media (hover: hover) { .promo:hover { transform: translateY(-2px); } .promo:hover .cans { transform: rotate(-12deg) translate(-4px, -4px); } }
+.promo[aria-pressed="true"] { outline: 3px solid var(--ink); outline-offset: 2px; }
+.promo__text { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; max-width: 62%; }
+.promo strong { font-size: 21px; line-height: 1.22; font-weight: 800; letter-spacing: -0.045em; }
+.promo span span, .promo__text > span { font-size: 12px; opacity: .85; font-variant-numeric: tabular-nums; }
+.promo em { margin-top: auto; padding-top: 10px; font-style: normal; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+.promo em::after { content: "→"; transition: transform .2s; }
+@media (hover: hover) { .promo:hover em::after { transform: translateX(3px); } }
+.cans { position: absolute; z-index: 0; right: -18px; bottom: -22px; width: 58%; height: auto; transform: rotate(-12deg); transition: transform .35s ease; stroke: none; }
+.cans .can { fill: var(--can); }
+.cans .lid { fill: var(--lid); }
+.cans .tab { fill: var(--can); }
+.promo--navy { background: var(--p-navy); color: #fff; --can: var(--p-navy-can); --lid: var(--p-navy-lid); }
+.promo--blue { background: var(--p-blue); color: #fff; --can: var(--p-blue-can); --lid: var(--p-blue-lid); }
+.promo--sun { background: var(--p-sun); color: #2a1f00; --can: var(--p-sun-can); --lid: var(--p-sun-lid); }
+.promo--red { background: var(--p-red); color: #fff; --can: var(--p-red-can); --lid: var(--p-red-lid); }
+.coll-chip { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 12px; font-weight: 600; padding: 5px 10px; margin-right: 4px; }
+.coll-chip span { opacity: .7; font-size: 10px; }
+
 .shelf__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 0 12px; }
 .shelf__count { margin: 0; font-size: 13px; color: var(--ink-2); }
 .shelf__count b { color: var(--ink); }
@@ -242,3 +288,4 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .foot .cs small { font-size: 12px; font-weight: 400; color: var(--ink-3); margin-left: 6px; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+.shelf__bar { scroll-margin-top: calc(56px + env(safe-area-inset-top, 0px)); }
