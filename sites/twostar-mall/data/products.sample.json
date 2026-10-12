@@ -1,0 +1,173 @@
+{
+  "products": [
+    {
+      "id": "sample-1",
+      "name": "[샘플] 상품 A",
+      "category": "커피·음료",
+      "price": 12900,
+      "salePrice": 9900,
+      "image": "assets/sample-1.svg",
+      "options": [
+        {
+          "name": "용량",
+          "values": [
+            {
+              "label": "500g"
+            },
+            {
+              "label": "1kg",
+              "extra": 8000
+            }
+          ]
+        }
+      ],
+      "badge": "BEST",
+      "reviewCount": 214,
+      "rating": 4.8,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-01",
+      "shippingFee": 0
+    },
+    {
+      "id": "sample-2",
+      "name": "[샘플] 상품 B",
+      "category": "커피·음료",
+      "price": 8900,
+      "salePrice": 8900,
+      "image": "assets/sample-2.svg",
+      "options": [],
+      "badge": "",
+      "reviewCount": 57,
+      "rating": 4.6,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-02"
+    },
+    {
+      "id": "sample-3",
+      "name": "[샘플] 상품 C",
+      "category": "커피·음료",
+      "price": 19800,
+      "salePrice": 15800,
+      "image": "assets/sample-3.svg",
+      "options": [
+        {
+          "name": "맛",
+          "values": [
+            {
+              "label": "오리지널"
+            },
+            {
+              "label": "헤이즐넛"
+            },
+            {
+              "label": "바닐라",
+              "soldOut": true
+            }
+          ]
+        }
+      ],
+      "badge": "20%",
+      "reviewCount": 98,
+      "rating": 4.7,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-03"
+    },
+    {
+      "id": "sample-4",
+      "name": "[샘플] 상품 D",
+      "category": "가공식품",
+      "price": 15000,
+      "salePrice": 11900,
+      "image": "assets/sample-4.svg",
+      "options": [],
+      "badge": "",
+      "reviewCount": 341,
+      "rating": 4.9,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-04",
+      "shippingFee": 0
+    },
+    {
+      "id": "sample-5",
+      "name": "[샘플] 상품 E",
+      "category": "가공식품",
+      "price": 6900,
+      "salePrice": 6900,
+      "image": "assets/sample-5.svg",
+      "options": [
+        {
+          "name": "수량",
+          "values": [
+            {
+              "label": "1개"
+            },
+            {
+              "label": "3개 묶음",
+              "extra": 12000
+            }
+          ]
+        }
+      ],
+      "badge": "NEW",
+      "reviewCount": 12,
+      "rating": 4.5,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-05"
+    },
+    {
+      "id": "sample-6",
+      "name": "[샘플] 상품 F",
+      "category": "건강식품",
+      "price": 39000,
+      "salePrice": 29900,
+      "image": "assets/sample-6.svg",
+      "options": [],
+      "badge": "",
+      "reviewCount": 128,
+      "rating": 4.8,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-06",
+      "shippingFee": 0
+    },
+    {
+      "id": "sample-7",
+      "name": "[샘플] 상품 G",
+      "category": "건강식품",
+      "price": 24900,
+      "salePrice": 24900,
+      "image": "assets/sample-7.svg",
+      "options": [],
+      "badge": "",
+      "reviewCount": 0,
+      "rating": 0,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-07"
+    },
+    {
+      "id": "sample-8",
+      "name": "[샘플] 상품 H",
+      "category": "주방용품",
+      "price": 9900,
+      "salePrice": 7900,
+      "image": "assets/sample-8.svg",
+      "options": [
+        {
+          "name": "색상",
+          "values": [
+            {
+              "label": "화이트"
+            },
+            {
+              "label": "블랙"
+            }
+          ]
+        }
+      ],
+      "badge": "",
+      "reviewCount": 44,
+      "rating": 4.4,
+      "description": "<p>샘플 상품입니다. 실제 상품 정보는 가져오기 스크립트로 채워집니다.</p>",
+      "createdAt": "2026-10-08"
+    }
+  ]
+}
