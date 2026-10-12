@@ -298,7 +298,7 @@ function renderCheckout() {
       <h3>주문 상품 <small>${t.count}개</small></h3>
       ${t.lines.map((l) => `
         <div class="line-item">
-          <img src="${esc(l.p.image)}" alt="">
+          <img src="${esc(l.p.image)}" alt="${esc(l.p.name)}">
           <div><p class="line-item__name">${esc(l.p.name)}</p>${l.opts && Object.keys(l.opts).length ? `<div class="line-item__opt">${esc(optText(l.opts))}</div>` : ""}${stepperHtml(l.qty, l.key)}</div>
           <div class="line-item__right"><span class="line-item__price">${won(unitPrice(l.p, l.opts) * l.qty)}</span><button class="link-btn" type="button" data-remove="${esc(l.key)}">삭제</button></div>
         </div>`).join("")}
@@ -539,7 +539,25 @@ function openFromHash() {
   if (p && !p.soldOut) p.options.length ? openPicker(p, "buy") : openCheckout([{ key: itemKey(p.id, {}), id: p.id, opts: {}, qty: 1 }], "now");
 }
 
+// 이미지 로드 실패 → 상품명 타일로 대체 (카페24 이미지 서버 차단 환경 등)
+function bindImageFallback() {
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || img.dataset.failed) return;
+    img.dataset.failed = "1";
+    const host = img.closest(".card, .pick, .line-item, .gallery");
+    const p = state.byId.get(host?.closest(".card")?.dataset.id) || (img.alt ? null : sheetCtx?.p) || null;
+    const label = (p?.name || img.alt || "투스타몰").replace(/\s*\d+\s*(ml|l|g|kg|개|캔|병|입|페트|팩).*$/i, "").slice(0, 24);
+    const ph = document.createElement("div");
+    ph.className = "ph" + (img.width && img.width < 90 ? " ph--sm" : "");
+    ph.textContent = label;
+    if (img.closest(".desc")) { img.remove(); return; }
+    img.replaceWith(ph);
+  }, true);
+}
+
 (async function init() {
+  bindImageFallback();
   bind();
   renderFooter();
   state.products = await loadProducts();

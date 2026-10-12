@@ -21,9 +21,14 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #111215; --surface: #1a1c20; --ink: #f2f2f3; --ink-2: #b9bcc3; --ink-3: #7e838c;
-    --line: #2a2d33; --brand: #8fa8ff; --brand-ink: #0d1020; --shadow: 0 8px 30px rgba(0,0,0,.5);
+    --line: #2a2d33; --brand: #8fb4ff; --brand-ink: #0d1020; --sale: #5aa2ff; --shadow: 0 8px 30px rgba(0,0,0,.5);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+    --bg: #111215; --surface: #1a1c20; --ink: #f2f2f3; --ink-2: #b9bcc3; --ink-3: #7e838c;
+    --line: #2a2d33; --brand: #8fb4ff; --brand-ink: #0d1020; --sale: #5aa2ff; --shadow: 0 8px 30px rgba(0,0,0,.5);
+    color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -38,7 +43,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 /* ---------- header ---------- */
-.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .top__inner { max-width: 1180px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
 .logo { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); flex-shrink: 0; }
 .logo__mark { color: var(--star); font-size: 14px; letter-spacing: -2px; }
@@ -202,3 +207,6 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .bank { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px; }
 .foot a { color: inherit; }
 .more { margin-top: 16px; height: 48px; color: var(--ink-2); }
+/* 이미지를 못 불러올 때 대체 타일 */
+.ph { width: 100%; height: 100%; display: grid; place-items: center; padding: 12%; background: color-mix(in srgb, var(--brand) 8%, var(--bg)); color: var(--brand); font-weight: 700; font-size: 13px; line-height: 1.35; text-align: center; word-break: keep-all; }
+.ph--sm { padding: 4px; font-size: 9px; border-radius: 8px; }
