@@ -42,7 +42,7 @@ function mapSimple(p) {
   const discounted = num(p.benefitsView?.discountedSalePrice ?? p.discountedSalePrice) || price;
   const cat = p.category?.wholeCategoryName || p.category?.categoryName || p.categoryName || "";
   return {
-    id: String(p.productNo || p.id),
+    id: `ss-${p.productNo || p.id}`, // 카페24 상품번호와 겹치지 않게
     channelProductNo: String(p.id || ""),
     name: p.name || p.dispName,
     category: (cat.split(">").pop() || "기타").trim(),

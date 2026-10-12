@@ -18,6 +18,7 @@ const state = {
   cat: "전체",
   q: "",
   sort: "popular",
+  limit: 40,
   cart: store.get("ts.cart", []),
   ship: store.get("ts.ship", null),
   pay: store.get("ts.pay", null),
@@ -100,7 +101,9 @@ function setQty(list, key, qty) {
 
 /* ---------------- list ---------------- */
 function renderCats() {
-  const cats = ["전체", ...new Set(state.products.map((p) => p.category))];
+  const count = {};
+  state.products.forEach((p) => (count[p.category] = (count[p.category] || 0) + 1));
+  const cats = ["전체", ...Object.keys(count).sort((a, b) => (a === "기타") - (b === "기타") || count[b] - count[a])];
   $("#cats").innerHTML = cats.map((c) => `<button class="chip" type="button" aria-pressed="${c === state.cat}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
 }
 
@@ -135,7 +138,8 @@ function renderGrid() {
   const list = visible();
   $("#resultCount").textContent = `상품 ${list.length.toLocaleString()}개`;
   $("#empty").hidden = list.length > 0;
-  $("#grid").innerHTML = list.map((p) => `
+  $("#more").hidden = list.length <= state.limit;
+  $("#grid").innerHTML = list.slice(0, state.limit).map((p) => `
     <li class="card" data-id="${esc(p.id)}">
       <button class="card__media" type="button" data-act="detail" aria-label="${esc(p.name)} 자세히 보기">
         <img src="${esc(p.image)}" alt="" loading="lazy" decoding="async">
@@ -415,7 +419,7 @@ function showDone(order) {
         <div class="sum-line"><span>배송비</span><span>${order.shipping ? won(order.shipping) : "무료"}</span></div>
         <div class="sum-line sum-line--total"><span>${esc(m?.label || "")}</span><span>${won(order.total)}</span></div>
         <p class="consent" style="text-align:left">${esc(order.ship.name)} · ${esc(order.ship.addr1)} ${esc(order.ship.addr2)}</p>
-        ${order.payMethod === "bank" ? `<p class="consent" style="text-align:left">입금 계좌는 문자로 안내드려요. 24시간 내 입금이 확인되면 출고됩니다.</p>` : ""}
+        ${order.payMethod === "bank" ? `<div class="bank"><b>입금 계좌</b> (예금주 ${esc(CFG.bankHolder || "")})${(CFG.bankAccounts || []).map((b) => `<div class="sum-line"><span>${esc(b.bank)}</span><span>${esc(b.number)} <button class="link-btn" type="button" data-copy="${esc(b.number)}">복사</button></span></div>`).join("")}<p class="consent" style="text-align:left">${won(order.total)}을 입금해주시면 확인 후 바로 출고됩니다.</p></div>` : ""}
       </div>
     </div>`;
   $("#sheetFoot").innerHTML = `<button class="btn btn--primary btn--lg btn--block" type="button" data-act="close">쇼핑 계속하기</button>`;
@@ -448,10 +452,13 @@ function toast(msg) {
 function bind() {
   $("#cats").addEventListener("click", (e) => {
     const b = e.target.closest("[data-cat]"); if (!b) return;
-    state.cat = b.dataset.cat; renderCats(); renderGrid();
+    state.cat = b.dataset.cat; state.limit = 40; renderCats(); renderGrid(); window.scrollTo({ top: 0 });
   });
-  let qt; $("#q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value; renderGrid(); }, 120); });
-  $("#sort").addEventListener("change", (e) => { state.sort = e.target.value; renderGrid(); });
+  let qt; $("#q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value; state.limit = 40; renderGrid(); }, 120); });
+  $("#sort").addEventListener("change", (e) => { state.sort = e.target.value; state.limit = 40; renderGrid(); });
+  const more = () => { state.limit += 40; renderGrid(); };
+  $("#more").addEventListener("click", more);
+  if ("IntersectionObserver" in window) new IntersectionObserver((es) => es[0].isIntersecting && !$("#more").hidden && more(), { rootMargin: "600px" }).observe($("#more"));
 
   $("#grid").addEventListener("click", (e) => {
     const b = e.target.closest("[data-act]"); if (!b) return;
@@ -490,6 +497,8 @@ function bind() {
         return renderCheckout();
       }
     }
+    const cp = t.closest("[data-copy]");
+    if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast("계좌번호를 복사했어요"), () => {}); return; }
     const rm = t.closest("[data-remove]");
     if (rm && c.type === "checkout") { keepDraft(); setQty(c.items, rm.dataset.remove, 0); if (c.source === "cart") { state.cart = c.items.map((x) => ({ ...x })); saveCart(); } return renderCheckout(); }
     const pay = t.closest("[data-pay]");
@@ -517,9 +526,10 @@ function renderFooter() {
   const co = CFG.company || {};
   const parts = [
     co.name && `<b>${esc(co.name)}</b>`, co.ceo && `대표 ${esc(co.ceo)}`, co.bizNo && `사업자등록번호 ${esc(co.bizNo)}`,
-    co.mailOrderNo && `통신판매업 ${esc(co.mailOrderNo)}`, co.address && esc(co.address), co.tel && `고객센터 ${esc(co.tel)}`, co.email && esc(co.email),
+    co.mailOrderNo && `통신판매업 ${esc(co.mailOrderNo)}`, co.address && esc(co.address), co.tel && `고객센터 <a href="tel:${esc(co.tel)}">${esc(co.tel)}</a>${co.hours ? ` (${esc(co.hours)})` : ""}`, co.email && esc(co.email),
   ].filter(Boolean);
   $("#foot").innerHTML = `<p>${parts.join(" · ") || `<b>${esc(CFG.name || "투스타몰")}</b> · 사업자 정보는 config.js 에서 설정하세요`}</p><p>© ${new Date().getFullYear()} ${esc(CFG.name || "투스타몰")}</p>`;
+  if (!CFG.freeShippingOver) $("#freeShipCopy").innerHTML = `<b>무료배송</b> 상품 다수`;
   if (CFG.freeShippingOver) $("#freeShipCopy").innerHTML = `<b>${(CFG.freeShippingOver / 10000).toLocaleString()}만원↑</b> 무료배송`;
 }
 

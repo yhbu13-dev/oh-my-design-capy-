@@ -5,10 +5,11 @@
   --ink-2: #4b4f57;
   --ink-3: #8a8f98;
   --line: #e7e5e0;
-  --brand: #1d2b53;
+  --brand: #0d2742;
   --brand-ink: #ffffff;
   --star: #ffb627;
-  --sale: #e5383b;
+  --sale: #1a7cf0;
+  --badge: #e5383b;
   --ok: #1f8a5b;
   --radius: 14px;
   --radius-sm: 10px;
@@ -198,3 +199,6 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media (max-width: 480px) { .promise > div { padding: 9px 4px; font-size: 12px; letter-spacing: -.02em; white-space: nowrap; } }
+.bank { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px; }
+.foot a { color: inherit; }
+.more { margin-top: 16px; height: 48px; color: var(--ink-2); }

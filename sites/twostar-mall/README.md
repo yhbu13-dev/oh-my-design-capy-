@@ -27,12 +27,13 @@
 2. 이 폴더(`sites/twostar-mall`)에서
    - Windows: `import-windows.bat` 더블클릭
    - Mac: `import-mac.command` 더블클릭 (처음엔 우클릭 → 열기)
-3. 스마트스토어 → twostar.net 순서로 상품을 가져온 뒤 브라우저에 미리보기가 열립니다.
+3. 스마트스토어 → twostar.net(카페24) 순서로 상품을 가져온 뒤 브라우저에 미리보기가 열립니다.
 
 ### 명령어로 직접
 
-> 이 저장소를 만든 클라우드 환경에서는 두 사이트 접속이 네트워크 정책으로 막혀 있어, 현재 `data/products.json` 은 비어 있고
-> 화면에는 `[샘플]` 상품이 표시됩니다. 아래 중 하나를 **본인 PC에서** 실행하면 실제 전 상품으로 바뀝니다. (Node 22+)
+> 현재 `data/products.json` 에는 **twostar.net(카페24) 전 상품**이 들어 있습니다 (`import-cafe24.mjs` 로 수집).
+> 스마트스토어는 네이버가 자동 접근을 차단(429)해 포함되지 않았습니다. 필요하면 아래 2)를 본인 PC에서 실행하거나 판매자센터 엑셀을 쓰세요.
+> 상품 이미지는 카페24 이미지 서버(ecimg.cafe24img.com) 주소를 그대로 씁니다. 상품 정보가 바뀌면 다시 실행하면 됩니다.
 
 ```bash
 cd sites/twostar-mall
@@ -43,8 +44,11 @@ node scripts/import-csv.mjs 상품목록.csv
 # 2) 스마트스토어 크롤링 (옵션·추가이미지까지: --details)
 node scripts/import-smartstore.mjs twostarmall --details
 
-# 3) twostar.net 크롤링 (sitemap + 상품 페이지의 JSON-LD/og 태그)
-node scripts/import-site.mjs https://twostar.net --merge   # --merge: 기존 상품과 합치기
+# 3) twostar.net(카페24) 전 상품 — 목록 + 옵션·배송비·상세이미지
+node scripts/import-cafe24.mjs https://twostar.net --merge   # --merge: 기존 상품과 합치기
+
+# (카페24가 아닌 일반 쇼핑몰: sitemap + JSON-LD/og 태그)
+node scripts/import-site.mjs https://example.com
 ```
 
 크롤링은 사이트 구조나 차단 정책이 바뀌면 실패할 수 있습니다. 그럴 땐 1)번 엑셀 방식을 쓰세요.
