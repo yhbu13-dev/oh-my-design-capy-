@@ -68,7 +68,7 @@ function parseDetail(html, p) {
       const data = JSON.parse(JSON.parse(`"${raw}"`));
       const combos = Object.values(data).filter((o) => o.is_display === "T");
       const names = combos[0]?.option_name_original || [];
-      const groups = names.map((name) => ({ name, values: [] }));
+      const groups = names.map((name) => ({ name: String(name).replace(/^선택\s*\d*$/, "옵션").replace(/\s*\d+$/, ""), values: [] }));
       for (const c of combos) {
         const vals = c.option_value_orginal || [c.option_value];
         const out = c.is_selling !== "T" || (c.use_stock && c.use_soldout === "T" && num(c.stock_number) <= 0);
