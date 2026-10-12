@@ -22,6 +22,15 @@
 
 ## 전 상품 가져오기
 
+### 가장 쉬운 방법 — 더블클릭
+1. [Node.js](https://nodejs.org) LTS 설치
+2. 이 폴더(`sites/twostar-mall`)에서
+   - Windows: `import-windows.bat` 더블클릭
+   - Mac: `import-mac.command` 더블클릭 (처음엔 우클릭 → 열기)
+3. 스마트스토어 → twostar.net 순서로 상품을 가져온 뒤 브라우저에 미리보기가 열립니다.
+
+### 명령어로 직접
+
 > 이 저장소를 만든 클라우드 환경에서는 두 사이트 접속이 네트워크 정책으로 막혀 있어, 현재 `data/products.json` 은 비어 있고
 > 화면에는 `[샘플]` 상품이 표시됩니다. 아래 중 하나를 **본인 PC에서** 실행하면 실제 전 상품으로 바뀝니다. (Node 22+)
 
@@ -52,7 +61,7 @@ node scripts/import-site.mjs https://twostar.net --merge   # --merge: 기존 상
 ## 로컬 실행
 
 ```bash
-cd sites/twostar-mall && python3 -m http.server 8080   # http://localhost:8080
+cd sites/twostar-mall && node scripts/serve.mjs   # http://localhost:8080
 ```
 
 ## 상품 데이터 형식 (`data/products.json`)
