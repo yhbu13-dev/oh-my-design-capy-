@@ -7,6 +7,8 @@
   <meta name="description" content="카페, 사무실, 가정 어디든 — 음료 고민은 투스타몰에서 해결하세요.">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,26 +18,40 @@
       <p class="strip__cs">고객센터 <span class="num">031-591-3447</span></p>
     </div>
   </div>
-  <header class="masthead">
-    <div class="masthead__row">
+
+  <header class="nav">
+    <div class="nav__in">
       <a class="wordmark" href="./" aria-label="투스타몰 홈">
         <svg class="mark" viewBox="0 0 40 24" aria-hidden="true"><path class="mark__a" d="M11 1.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L11 16.7l-6.1 3.4 1.4-6.8L1.2 8.6l6.9-.8z"/><path class="mark__b" d="M27 3.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L27 18.7l-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z"/></svg>
         <span>투스타몰</span>
       </a>
-      <p class="masthead__tag">카페 · 사무실 · 가정용 음료 대용량</p>
-      <button class="cart-link" id="openCart" type="button" aria-label="장바구니">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.6 9.2a1.6 1.6 0 0 0 1.6 1.3h7.9a1.6 1.6 0 0 0 1.6-1.2L20 8.5H7"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg>
-        <span class="cart-link__n" id="cartCount" hidden>0</span>
-      </button>
+      <nav class="nav__links" aria-label="바로가기">
+        <button type="button" data-scroll="listTop">전체 상품</button>
+        <button type="button" data-scroll="planner">탕비실 계산기</button>
+        <button type="button" data-scroll="compare">가격 비교</button>
+        <button type="button" data-scroll="biz">대량 구매</button>
+      </nav>
+      <div class="nav__cta">
+        <button class="btn btn--ghost cart-link" id="openCart" type="button" aria-label="장바구니">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.6 9.2a1.6 1.6 0 0 0 1.6 1.3h7.9a1.6 1.6 0 0 0 1.6-1.2L20 8.5H7"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg>
+          <span class="nav__label">장바구니</span>
+          <span class="cart-link__n" id="cartCount" hidden>0</span>
+        </button>
+        <button class="btn btn--dark" type="button" id="navOrder">주문하기 <span aria-hidden="true">→</span></button>
+      </div>
     </div>
-    <label class="search">
-      <span class="sr-only">상품 검색</span>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>
-      <input id="q" type="search" placeholder="찾는 음료가 있나요? 예) 제로콜라, 시럽" autocomplete="off" enterkeyhint="search">
-    </label>
   </header>
 
-  <nav class="tabs" id="cats" aria-label="카테고리"></nav>
+  <div class="tabs-wrap">
+    <div class="tabs-row">
+      <nav class="tabs" id="cats" aria-label="카테고리"></nav>
+      <label class="search">
+        <span class="sr-only">상품 검색</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>
+        <input id="q" type="search" placeholder="음료 검색 · 예) 제로콜라, 시럽" autocomplete="off" enterkeyhint="search">
+      </label>
+    </div>
+  </div>
 
   <div class="notice" id="sampleNotice" hidden>
     <b>[샘플]</b> 상품이 표시되고 있습니다. <code>scripts/</code>의 가져오기 스크립트로 실제 상품을 불러오세요.
@@ -43,34 +59,52 @@
 
   <main class="shelf">
     <div id="home">
-      <section class="hero" aria-label="추천">
-        <div class="hero__stage">
-          <div class="slides" id="slides"></div>
-          <div class="dots" id="dots" role="tablist" aria-label="배너 넘기기"></div>
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero__copy">
+          <span class="tag tag--mint">BEVERAGE WHOLESALE</span>
+          <h1 id="heroTitle">카페, 사무실, 가정까지<br>음료는 박스로<br>한 번에.</h1>
+          <p>투스타몰은 음료·커피·시럽을 대용량 박스로 공급합니다. 개당 가격을 비교하고, 인원만 넣으면 발주서가 나오고, 23시 전에 결제하면 오늘 출발합니다.</p>
+          <div class="hero__btns">
+            <button class="btn btn--dark btn--lg" type="button" data-scroll="planner">탕비실 계산하기 <span aria-hidden="true">→</span></button>
+            <button class="btn btn--ghost btn--lg" type="button" data-scroll="listTop">전체 상품 보기</button>
+          </div>
+          <dl class="hero__facts" id="heroFacts"></dl>
         </div>
-        <aside class="today" id="today" aria-label="오늘 출발"></aside>
+        <div class="bento" id="bento"></div>
       </section>
 
-      <nav class="caticons" id="catIcons" aria-label="카테고리 바로가기"></nav>
+      <section class="sec dilemma" aria-labelledby="dilemmaTitle">
+        <span class="tag tag--pink">BUYING DILEMMA</span>
+        <h2 id="dilemmaTitle">음료 구매가 아직도<br>번거로운 이유.</h2>
+        <div class="dilemma__grid" id="dilemma"></div>
+      </section>
 
-      <section class="sec planner" id="planner" aria-labelledby="plannerTitle"></section>
+      <section class="sec cats-sec" aria-label="카테고리 바로가기">
+        <nav class="caticons" id="catIcons"></nav>
+      </section>
+
+      <section class="sec platform" aria-labelledby="rankTitle">
+        <span class="tag tag--mint">ONE TABLE</span>
+        <h2 id="rankTitle">필요한 음료, 한 표에서<br>비교하고 바로 담기.</h2>
+        <div class="dash" id="dash"></div>
+        <div class="features" id="features"></div>
+      </section>
 
       <section class="sec" aria-labelledby="dealTitle">
-        <header class="sec__head"><h2 id="dealTitle">오늘의 할인</h2><button class="sec__more" type="button" data-goto-coll="deal">전체보기</button></header>
+        <header class="sec__head"><div><span class="tag tag--mint">TODAY'S DEALS</span><h2 id="dealTitle">오늘의 할인</h2></div><button class="sec__more" type="button" data-goto-coll="deal">전체보기</button></header>
         <ul class="rail" id="deals"></ul>
       </section>
 
+      <section class="sec planner" id="planner" aria-labelledby="plannerTitle"></section>
+
       <section class="sec compare" id="compare" aria-labelledby="compareTitle"></section>
 
-      <section class="sec" aria-labelledby="rankTitle">
-        <header class="sec__head"><h2 id="rankTitle">투스타 추천 TOP 10</h2></header>
-        <div class="pills" id="rankTabs" role="tablist"></div>
-        <ol class="rank" id="rank"></ol>
+      <section class="sec" aria-labelledby="promoTitle">
+        <header class="sec__head"><div><span class="tag tag--mint">COLLECTIONS</span><h2 id="promoTitle">상황별로 골라 담기</h2></div></header>
+        <div class="promos" id="promos"></div>
       </section>
 
-      <section class="promos" id="promos" aria-label="기획전"></section>
-
-      <section class="biz" id="biz" aria-label="대량 구매 상담"></section>
+      <section class="band" id="biz" aria-labelledby="bizTitle"></section>
     </div>
 
     <div class="shelf__bar" id="listTop">

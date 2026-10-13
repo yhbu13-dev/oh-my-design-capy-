@@ -1,5 +1,7 @@
 # 투스타몰 — 구매 단계를 줄인 스토어프런트
 
+화면 구성(위→아래): 오늘 출발 띠 · 상단 메뉴 · 카테고리/검색 → 히어로(문구 + 추천 상품 카드·타일 벤토) → 구매 고민 3가지 → 카테고리 → 발주 표(사이드바 카테고리 + 추천 TOP 10) → 오늘의 할인 → 탕비실 계산기(3단계 카드) → 100ml당 가격 비교 → 기획전 → 대량 구매 CTA → 전체 상품 → 푸터.
+
 [twostar.net](https://twostar.net/) / [스마트스토어 twostarmall](https://smartstore.naver.com/twostarmall) 상품을 옮겨 담는 정적 쇼핑몰입니다.
 빌드 없이 `index.html` 하나로 돌아가며, 아무 정적 호스팅(Vercel, Netlify, GitHub Pages, S3)에 그대로 올리면 됩니다.
 
