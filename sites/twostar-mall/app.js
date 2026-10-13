@@ -285,12 +285,16 @@ function openProduct(p) {
   });
   sheet = { type: "product", p, opts, qty: 1 };
   openSheet(p.category, productBody(p), productFoot());
+  if (TS3D) TS3D.ready.then(() => { try { $(".pd3d__mount")?.appendChild(TS3D.viewer(info3d(p))); } catch { $(".pd3d")?.classList.remove("is-3d"); } });
 }
 function productBody(p) {
   const { opts } = sheet;
   const comp = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");
   return `
-    <div class="pd__media"><img src="${esc(p.image)}" alt="${esc(p.name)}"></div>
+    <div class="pd__media${TS3D ? " pd3d is-3d" : ""}">
+      ${TS3D ? `<div class="pd3d__mount"></div><span class="pd3d__hint">드래그해서 360° 돌려보기</span><div class="pd3d__switch" role="group" aria-label="보기 방식"><button type="button" data-view="3d" aria-pressed="true">3D</button><button type="button" data-view="photo" aria-pressed="false">사진</button></div>` : ""}
+      <img src="${esc(p.image)}" alt="${esc(p.name)}">
+    </div>
     <div class="pd__info">
       <h3 class="pd__name">${esc(p.name)}</h3>
       ${priceHtml(p)}${unitHtml(p)}
@@ -565,6 +569,36 @@ function packArt(p, size = "") {
   return `<div class="ph tone-${toneOf(p)} ${size}"><svg viewBox="0 0 120 120" class="pk" aria-hidden="true">${PACK[kindOf(p)]}</svg><b>${esc(shortName(p.name))}</b>${spec ? `<span>${esc(spec)}</span>` : ""}</div>`;
 }
 
+/* --- 3D (three3d.js) --- */
+const TS3D = window.TS3D || null;
+function info3d(p) {
+  const core = shortName(p.name); const [brand, rest] = splitBrand(core);
+  return { name: p.name, brand: brand || core, rest: brand ? rest : "", short: core, tone: toneOf(p), kind: kindOf(p),
+    spec: [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ") };
+}
+let hero3d = null; let heroSlides = [];
+let pallet3d = null; let palletEl = null;
+function mountPallet() {
+  const mount = $("#palletMount");
+  if (!TS3D || !mount) return;
+  if (!palletEl) {
+    palletEl = document.createElement("div");
+    palletEl.className = "pallet3d__stage";
+    palletEl.innerHTML = `<canvas aria-label="발주 수량을 팔레트 위 박스로 표시한 3D 그림"></canvas><p class="pallet3d__info num"></p><span class="pallet3d__hint">${matchMedia("(pointer: fine)").matches ? "드래그해서 돌려보기" : "밀어서 돌려보기"}</span>`;
+    mount.appendChild(palletEl);
+    try { pallet3d = TS3D.pallet(palletEl.querySelector("canvas")); } catch { pallet3d = null; palletEl.remove(); palletEl = null; return; }
+  } else { mount.appendChild(palletEl); }
+  $("#planner").classList.add("has3d");
+  syncPallet();
+}
+function syncPallet() {
+  if (!pallet3d) return;
+  const r = buildPlan();
+  const res = pallet3d.set(r.rows);
+  const boxes = r.rows.reduce((s, x) => s + x.boxes, 0);
+  palletEl.querySelector(".pallet3d__info").innerHTML = `<b>${boxes}박스</b> · 팔레트 ${Math.max(1, Math.ceil(res.shown / 48))}개${res.hidden ? ` <em>+${res.hidden}박스 더</em>` : ""}`;
+}
+
 /* --- 메인 배너 --- */
 let slideTimer = null; let slideIdx = 0;
 function renderSlides() {
@@ -591,6 +625,21 @@ function renderSlides() {
       <div class="slide__art">${s.p ? `<div class="slide__img"><img src="${esc(s.p.image)}" alt="${esc(s.p.name)}"></div>` : plannerArt()}</div>
     </article>`).join("");
   $("#dots").innerHTML = slides.map((_, i) => `<button type="button" role="tab" class="dot" data-dot="${i}" aria-label="${i + 1}번 배너"><i></i></button>`).join("");
+  heroSlides = slides;
+  if (TS3D && !hero3d) {
+    const cv = document.createElement("canvas");
+    cv.className = "hero3d"; cv.setAttribute("aria-hidden", "true");
+    $(".hero__stage").appendChild(cv);
+    const sats = state.products.filter((p) => typeOf(p) && !p.soldOut && !slides.some((s) => s.p === p)).sort((a, b) => a.rank - b.rank)
+      .filter((p, i, arr) => arr.findIndex((q) => kindOf(q) === kindOf(p) && toneOf(q) === toneOf(p)) === i || i < 3).slice(0, 8);
+    TS3D.ready.then(() => {
+      try {
+        hero3d = TS3D.hero(cv, sats.map(info3d));
+        $(".hero__stage").classList.add("has3d");
+        show3dSlide(slideIdx);
+      } catch { cv.remove(); }
+    });
+  }
   goSlide(0, false);
   const stage = $(".hero__stage");
   const stop = () => clearInterval(slideTimer);
@@ -599,11 +648,16 @@ function renderSlides() {
   stage.addEventListener("touchstart", stop, { passive: true });
   $("#slides").addEventListener("scroll", () => {
     const i = Math.round($("#slides").scrollLeft / $("#slides").clientWidth);
-    if (i !== slideIdx) { slideIdx = i; markDots(); }
+    if (i !== slideIdx) { slideIdx = i; show3dSlide(i); markDots(); }
   }, { passive: true });
   start();
 }
+function show3dSlide(i) {
+  const s = heroSlides[i];
+  if (hero3d && s) hero3d.show(s.p ? info3d(s.p) : "pallet");
+}
 function goSlide(i, smooth = true) {
+  if (i !== slideIdx || smooth === false) { slideIdx = i; show3dSlide(i); }
   slideIdx = i;
   const el = $("#slides");
   el.scrollTo({ left: i * el.clientWidth, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "auto" });
@@ -736,8 +790,9 @@ function renderPlanner() {
           <div class="seg seg--multi">${TYPES.map((t) => `<button type="button" aria-pressed="${plan.types.includes(t.id)}" data-pl-type="${t.id}"><i class="sw tone-${t.tone}"></i>${t.label}</button>`).join("")}</div>
         </div>
       </div>
-      ${planResultHtml()}
+      <div class="planner__right"><div class="pallet3d" id="palletMount"></div>${planResultHtml()}</div>
     </div>`;
+  mountPallet();
 }
 
 /* --- 오늘의 할인 / 가격 비교 / 랭킹 --- */
@@ -810,6 +865,7 @@ function bindHome() {
       plan.people = Number(e.target.value);
       e.target.previousElementSibling.querySelector("output").textContent = `${plan.people}명`;
       $("#planner .sheetcard").outerHTML = planResultHtml();
+      syncPallet();
     }
   });
   $("#home").addEventListener("click", (e) => {
@@ -897,6 +953,8 @@ function bind() {
     if (rm && c.type === "checkout") { keepDraft(); setQty(c.items, rm.dataset.remove, 0); if (c.source === "cart") { state.cart = c.items.map((x) => ({ ...x })); commitCart(); } return renderCheckout(); }
     const pay = t.closest("[data-pay]");
     if (pay && c.type === "checkout") { keepDraft(); c.pay = pay.dataset.pay; return renderCheckout(); }
+    const vw = t.closest("[data-view]");
+    if (vw) { const box = vw.closest(".pd3d"); box.classList.toggle("is-3d", vw.dataset.view === "3d"); box.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", b === vw)); return; }
     const cp = t.closest("[data-copy]");
     if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast("계좌번호를 복사했어요"), () => toast(cp.dataset.copy)); return; }
 
@@ -920,7 +978,31 @@ function renderFooter() {
     <p style="margin-top:10px">© ${new Date().getFullYear()} ${esc(CFG.name || "투스타몰")}</p>`;
 }
 
+// 마우스를 따라 기울어지는 입체 효과
+function bindTilt() {
+  if (!matchMedia("(pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const SEL = ".item__media, .promo, .caticons button, .rankrow__img, .today, .sheetcard";
+  let cur = null;
+  const reset = (el) => { el.style.removeProperty("--rx"); el.style.removeProperty("--ry"); el.classList.remove("is-tilt"); };
+  document.addEventListener("pointermove", (e) => {
+    const el = e.target.closest?.(SEL);
+    if (cur && cur !== el) { reset(cur); cur = null; }
+    if (!el) return;
+    cur = el;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width; const y = (e.clientY - r.top) / r.height;
+    const k = el.matches(".today, .sheetcard") ? 3 : 9;
+    el.classList.add("is-tilt");
+    el.style.setProperty("--rx", `${((0.5 - y) * k).toFixed(2)}deg`);
+    el.style.setProperty("--ry", `${((x - 0.5) * k).toFixed(2)}deg`);
+    el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`);
+    el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
+  }, { passive: true });
+  document.addEventListener("pointerleave", () => cur && reset(cur));
+}
+
 (async function init() {
+  bindTilt();
   bindImageFallback();
   bind();
   renderFooter();
