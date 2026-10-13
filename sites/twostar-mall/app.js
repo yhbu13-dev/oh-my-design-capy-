@@ -293,8 +293,8 @@ function productBody(p) {
   const { opts } = sheet;
   const comp = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");
   return `
-    <div class="pd__media${TS3D ? ` pd3d${p.ownPhoto ? "" : " is-3d"}` : ""}">
-      ${TS3D ? `<div class="pd3d__mount"></div><span class="pd3d__hint">드래그해서 360° 돌려보기</span><div class="pd3d__switch" role="group" aria-label="보기 방식"><button type="button" data-view="3d" aria-pressed="${!p.ownPhoto}">3D</button><button type="button" data-view="photo" aria-pressed="${p.ownPhoto}">사진</button></div>` : ""}
+    <div class="pd__media${TS3D ? ` pd3d${p.ownPhoto && !CFG.products3d?.[p.id] ? "" : " is-3d"}` : ""}">
+      ${TS3D ? `<div class="pd3d__mount"></div><span class="pd3d__hint">드래그해서 360° 돌려보기</span><div class="pd3d__switch" role="group" aria-label="보기 방식"><button type="button" data-view="3d" aria-pressed="${!p.ownPhoto || !!CFG.products3d?.[p.id]}">3D</button><button type="button" data-view="photo" aria-pressed="${p.ownPhoto && !CFG.products3d?.[p.id]}">사진</button></div>` : ""}
       <img src="${esc(p.image)}" alt="${esc(p.name)}">
     </div>
     <div class="pd__info">
@@ -575,7 +575,8 @@ function packArt(p, size = "") {
 const TS3D = window.TS3D || null;
 function info3d(p) {
   const core = shortName(p.name); const [brand, rest] = splitBrand(core);
-  return { name: p.name, brand: brand || core, rest: brand ? rest : "", short: core, tone: toneOf(p), kind: kindOf(p),
+  const photo = CFG.products3d?.[p.id];
+  return { name: p.name, brand: brand || core, rest: brand ? rest : "", short: core, tone: toneOf(p), kind: photo ? "bottle" : kindOf(p), photo,
     spec: [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ") };
 }
 let hero3d = null;
@@ -743,7 +744,7 @@ function showHero(i, only3d = false) {
   const img = document.createElement("img");
   img.className = "pcard__img"; img.alt = p.name; img.src = p.image;
   media.prepend(img);
-  media.classList.toggle("photo", p.ownPhoto); // 직접 올린 사진이 있으면 3D 대신 사진
+  media.classList.toggle("photo", p.ownPhoto && !CFG.products3d?.[p.id]); // 사진만 있으면 사진, 실사 3D가 있으면 3D
   const t = typeOf(p);
   const similar = state.products.filter((q) => q !== p && !q.soldOut && typeOf(q) === t && q.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice).slice(0, 3);
   const spec = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");

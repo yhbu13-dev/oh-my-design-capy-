@@ -115,7 +115,137 @@
   /* ---------- 포장 모델 ---------- */
   const metal = new T.MeshStandardMaterial({ color: 0xd2d7dd, metalness: 0.85, roughness: 0.28 });
   const metalDark = new T.MeshStandardMaterial({ color: 0xa9b0b8, metalness: 0.9, roughness: 0.35 });
+  /* ---------- 실사 페트병 (상품 사진을 몸통에 감고 PBR 재질·스튜디오 반사로 렌더링) ---------- */
+  // info.photo = { src, cx, r, top, bottom, band:[y0,y1] } : 사진 속 병 몸통 중심 x·반지름(px), 초록 몸통 위·아래 y, 라벨(엠블럼) 세로 범위
+  function photoBodyTexture(img, ph) {
+    const W = 2048, H = 1024;
+    const src = document.createElement("canvas"); src.width = img.naturalWidth; src.height = img.naturalHeight;
+    const sg = src.getContext("2d"); sg.drawImage(img, 0, 0);
+    const top = ph.top, sh = ph.bottom - ph.top;
+    const S = sg.getImageData(0, 0, src.width, src.height).data, SW = src.width;
+    const at = (x, y) => { const i = (Math.round(y) * SW + Math.round(x)) * 4; return [S[i], S[i + 1], S[i + 2]]; };
+    const A0 = 0.95, FEATHER = 0.18;                       // 사진은 정면 ±54°만 쓰고, 그 밖은 몸통 색을 이어 그린다
+    const b0 = ph.band ? ph.band[0] : -1, b1 = ph.band ? ph.band[1] : -1;
+    // 가장자리 색(라벨 띠는 위·아래 색으로 보간) — 왼쪽/오른쪽 따로
+    const edgeCol = (side, y) => {
+      const x = ph.cx + side * Math.sin(A0) * ph.r * 0.985;
+      if (y >= b0 && y <= b1) { const t = (y - b0) / (b1 - b0), c0 = at(x, b0 - 2), c1 = at(x, b1 + 2); return c0.map((v, k) => v * (1 - t) + c1[k] * t); }
+      return at(x, y);
+    };
+    const out = new ImageData(W, H), O = out.data;
+    for (let y = 0; y < H; y++) {
+      const sy = top + (y / H) * sh;
+      const eL = edgeCol(-1, sy), eR = edgeCol(1, sy);
+      // 둥근 라벨 행에서는 라벨 윤곽(타원)만큼 사진 범위를 넓혀, 사각형 경계 없이 라벨이 잘리지 않게 한다
+      let AR = A0;
+      if (ph.label) {
+        const [lx, ly, lw, lh] = ph.label, q = (sy - ly) / lh;
+        if (Math.abs(q) < 1) AR = Math.max(A0, Math.asin(Math.min(0.985, (lw * Math.sqrt(1 - q * q) + Math.abs(lx - ph.cx) + 4) / ph.r)));
+      }
+      for (let x = 0; x < W; x++) {
+        let th = (x / W - 0.25) * Math.PI * 2; if (th > Math.PI) th -= Math.PI * 2;
+        const a = Math.abs(th);
+        // 뒤쪽 이어 그리기: 양쪽 가장자리 색을 뒤로 갈수록 섞는다
+        const mix = Math.min(1, Math.max(0, (a - A0) / (Math.PI - A0)));
+        const side = th < 0 ? eL : eR, other = th < 0 ? eR : eL;
+        let c = side.map((v, k) => v * (1 - mix * 0.5) + other[k] * mix * 0.5);
+        if (a < AR + FEATHER) {
+          const p = at(ph.cx + Math.sin(Math.max(-AR, Math.min(AR, th))) * ph.r * 0.985, sy);
+          const w = a <= AR ? 1 : 1 - (a - AR) / FEATHER;
+          c = c.map((v, k) => p[k] * w + v * (1 - w));
+        }
+        const i = (y * W + x) * 4; O[i] = c[0]; O[i + 1] = c[1]; O[i + 2] = c[2]; O[i + 3] = 255;
+      }
+    }
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d"); g.putImageData(out, 0, 0);
+    // 사진에 보이는 페트 성형 세로줄 + 뒤쪽 기포
+    g.globalCompositeOperation = "soft-light";
+    for (let x = 0; x < W; x += 9) { g.fillStyle = x % 18 ? "rgba(255,255,255,.10)" : "rgba(0,0,0,.08)"; g.fillRect(x, 0, 3, H); }
+    g.globalCompositeOperation = "source-over";
+    g.strokeStyle = "rgba(225,255,235,.55)"; g.lineWidth = 2;
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let n = 0; n < 70; n++) {
+      const u = 0.55 + rnd() * 0.4, y = H * (rnd() < 0.5 ? 0.05 + rnd() * 0.12 : 0.55 + rnd() * 0.25), r = 3 + rnd() * 9;
+      g.beginPath(); g.arc(u * W, y, r, 0, Math.PI * 2); g.stroke();
+    }
+    const t = new T.CanvasTexture(c);
+    t.encoding = T.sRGBEncoding; t.anisotropy = 8; t.wrapS = T.RepeatWrapping; t.offset.x = 0.25;
+    return t;
+  }
+  const photoCache = new Map();
+  function loadPhoto(src) {
+    if (!photoCache.has(src)) photoCache.set(src, new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }));
+    return photoCache.get(src);
+  }
+  // 원주 방향으로 홈(골)을 판 회전체: 페트 어깨의 세로 홈, 바닥 꽃모양, 뚜껑 톱니
+  function grooved(points, segs, fn) {
+    const geo = new T.LatheGeometry(points.map(([x, y]) => new T.Vector2(x, y)), segs);
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      const k = fn(Math.atan2(z, x), y);
+      p.setX(i, x * k); p.setZ(i, z * k);
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+  function photoBottle(info) {
+    const ph = info.photo;
+    const g = new T.Group();
+    const R = 0.175, TOP = 0.92, BOT = 0.05;
+    // 몸통: 사진 텍스처 + 광택 코팅(클리어코트) → 스튜디오 조명이 비친다
+    const bodyMat = new T.MeshPhysicalMaterial({ color: ph.body || "#01954a", roughness: 0.35, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.0 });
+    const body = new T.Mesh(new T.CylinderGeometry(R, R, TOP - BOT, 128, 1, true), bodyMat);
+    body.position.y = BOT + (TOP - BOT) / 2;
+    loadPhoto(ph.src).then((img) => { bodyMat.map = photoBodyTexture(img, ph); bodyMat.color.set("#ffffff"); bodyMat.needsUpdate = true; }).catch(() => {});
+    // 투명 페트 공통 재질 (빛 투과)
+    const pet = new T.MeshPhysicalMaterial({ color: "#e6f3ec", metalness: 0, roughness: 0.06, transmission: 0.82, transparent: true, opacity: 1, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6, side: T.DoubleSide });
+    // 어깨: 위로 좁아지며 세로 홈 28줄
+    const shoulderPts = [[R, TOP], [0.172, 0.97], [0.162, 1.03], [0.143, 1.09], [0.12, 1.15], [0.1, 1.2], [0.091, 1.235], [0.09, 1.262]];
+    const shoulder = new T.Mesh(grooved(shoulderPts, 168, (a, y) => (y > 0.95 && y < 1.2 ? 1 + 0.018 * Math.cos(a * 28) * Math.sin(((y - 0.95) / 0.25) * Math.PI) : 1)), pet);
+    // 어깨 아래쪽에 찬 탄산수 (수면 1.0)
+    const liquid = new T.MeshPhysicalMaterial({ color: "#1fa34f", metalness: 0, roughness: 0.1, transmission: 0.55, transparent: true, envMapIntensity: 0.8 });
+    const fill = new T.Mesh(new T.LatheGeometry([[0, TOP - 0.01], [R - 0.006, TOP - 0.01], [0.168, 0.97], [0.158, 1.0], [0, 1.0]].map(([x, y]) => new T.Vector2(x, y)), 96), liquid);
+    // 바닥: 다섯 갈래 꽃모양
+    const footMat = new T.MeshPhysicalMaterial({ color: "#04813f", roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.08, transmission: 0.25, transparent: true });
+    const foot = new T.Mesh(grooved([[0, 0.004], [0.07, 0], [0.13, 0.006], [0.165, 0.025], [R, BOT]], 160, (a, y) => 1 - 0.07 * Math.max(0, Math.cos(a * 5)) * (1 - y / BOT)), footMat);
+    // 목 링 + 뚜껑(톱니 48개)
+    const capMat = new T.MeshPhysicalMaterial({ color: ph.cap || "#f2f4f3", roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.4 });
+    const ring = new T.Mesh(new T.TorusGeometry(0.098, 0.009, 12, 96), capMat); ring.rotation.x = Math.PI / 2; ring.position.y = 1.262;
+    const cap = new T.Mesh(grooved([[0.096, 1.27], [0.098, 1.28], [0.098, 1.395], [0.094, 1.405], [0, 1.405]], 192, (a, y) => (y > 1.278 && y < 1.395 ? 1 + 0.012 * Math.sign(Math.cos(a * 48)) : 1)), capMat);
+    g.add(foot, body, fill, shoulder, ring, cap);
+    const shd = contactShadow(1.0, 0.85); shd.position.y = 0.002; g.add(shd);
+    g.userData.height = 1.41;
+    g.userData.studio = true; // 스튜디오 반사·톤 보정 켜기
+    return g;
+  }
+
+  // 스튜디오 반사 환경: 어두운 방에 큰 소프트박스 3개 → PMREM 으로 구워 반사광으로 쓴다
+  const envCache = new WeakMap();
+  function studioEnv(renderer) {
+    if (envCache.has(renderer)) return envCache.get(renderer);
+    const room = new T.Scene();
+    room.add(new T.Mesh(new T.BoxGeometry(10, 10, 10), new T.MeshBasicMaterial({ color: 0x3a3f45, side: T.BackSide })));
+    const panel = (w, h, x, y, z, ry, c) => { const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ color: c, side: T.DoubleSide })); m.position.set(x, y, z); m.rotation.y = ry; room.add(m); };
+    panel(2.6, 6, -4.4, 0.6, 1.2, Math.PI / 2, 0xffffff * 1);   // 왼쪽 세로 소프트박스
+    panel(2.2, 6, 4.4, 0.4, -0.4, -Math.PI / 2, 0xe8f2ff);      // 오른쪽
+    panel(5, 1.4, 0, 4.6, 0, 0, 0xffffff);                       // 위
+    const top = room.children[room.children.length - 1]; top.rotation.x = Math.PI / 2;
+    panel(4, 3, 0, 1, -4.6, 0, 0x9aa3ad);                        // 뒤 은은한 판
+    const pm = new T.PMREMGenerator(renderer);
+    const tex = pm.fromScene(room, 0.03).texture; pm.dispose();
+    envCache.set(renderer, tex);
+    return tex;
+  }
+  function setStudio(st, on) {
+    st.scene.environment = on ? studioEnv(st.renderer) : null;
+    st.renderer.toneMapping = T.NoToneMapping;
+    st.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => (m.needsUpdate = true)); });
+  }
+
   function makePack(info) {
+    if (info.photo && info.kind === "bottle") return photoBottle(info);
     const g = new T.Group();
     const tone = TONES[info.tone] || TONES.slate;
     if (info.kind === "can") {
@@ -256,6 +386,7 @@
     return {
       show(info) {
         const next = info === "pallet" ? miniPallet() : makePack(info);
+        setStudio(st, !!next.userData.studio);
         next.scale.setScalar(0.001);
         root.add(next);
         if (incoming) { root.remove(center); center = incoming; }
@@ -372,8 +503,9 @@
       };
     }
     if (viewerItem) viewerSt.scene.remove(viewerItem);
-    viewerItem = makePack(info); viewerItem.scale.setScalar(1.35);
-    viewerSpin.angle = -0.5; viewerSpin.vel = 0; viewerSpin.touched = false;
+    viewerItem = makePack(info); viewerItem.scale.setScalar(viewerItem.userData.studio ? 1.22 : 1.35);
+    setStudio(viewerSt, !!viewerItem.userData.studio);
+    viewerSpin.angle = info.photo ? 0 : -0.5; viewerSpin.vel = 0; viewerSpin.touched = false;
     viewerSt.scene.add(viewerItem);
     // 캔버스는 반환 뒤에 시트에 붙으므로, 붙은 다음 프레임에 보임 상태로 돌려서 그리기 시작
     requestAnimationFrame(() => viewerSt.loop());
