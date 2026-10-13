@@ -793,16 +793,54 @@ function buildPlan() {
   const units = rows.reduce((s, r) => s + r.units, 0);
   return { need, rows, items, t, units, perPersonDay: t.total / (plan.people * plan.days) };
 }
+const WD = ["일", "월", "화", "수", "목", "금", "토"];
+function addWorkdays(n) {
+  const d = new Date(Date.now() + 9 * 3600e3); // KST
+  let left = n;
+  while (left > 0) { d.setUTCDate(d.getUTCDate() + 1); const w = d.getUTCDay(); if (w && w < 6) left--; }
+  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}(${WD[d.getUTCDay()]})`;
+}
 function planStatsHtml(r) {
-  const cells = 60;
-  const waffle = r.rows.flatMap((row) => Array.from({ length: Math.round((row.units / r.units) * cells) }, () => row.t.tone)).slice(0, cells);
-  while (waffle.length < cells) waffle.push(r.rows.at(-1)?.t.tone || "slate");
+  const daily = plan.people * plan.perDay;
+  const covers = Math.floor(r.units / daily);
+  const spare = r.units - r.need;
+  const maxBox = Math.max(1, ...r.rows.map((x) => x.boxes));
+  const per = maxBox > 12 ? Math.ceil(maxBox / 12) : 1; // 아이콘 1개 = per 박스
+  const span = Math.max(covers, plan.days);
+  const ticks = [0, Math.round(span / 2), span];
+  const shelf = r.rows.map((row, i) => {
+    const n = Math.ceil(row.boxes / per);
+    return `<div class="shelf2__col" style="--i:${i}">
+        <span class="shelf2__n num">${row.boxes}<small>박스</small></span>
+        <div class="shelf2__stack">${Array.from({ length: n }, (_, k) => `<i class="tone-${row.t.tone}" style="--k:${k}"></i>`).join("")}</div>
+        <b><i class="sw tone-${row.t.tone}"></i>${esc(row.t.label)}</b>
+      </div>`;
+  }).join("");
+  const cost = r.rows.map((row) => ({ row, amt: row.p.salePrice * row.boxes }));
+  const sum = cost.reduce((x, c) => x + c.amt, 0) || 1;
   return `<dl class="stats">
       <div><dt>예상 소비량</dt><dd class="num">${r.need.toLocaleString()}<small>잔</small></dd></div>
       <div><dt>발주 수량</dt><dd class="num">${r.units.toLocaleString()}<small>개</small></dd></div>
       <div><dt>1인 1일</dt><dd class="num">${won(r.perPersonDay)}</dd></div>
     </dl>
-    <div class="waffle" aria-hidden="true">${waffle.map((t) => `<i class="tone-${t}"></i>`).join("")}</div>`;
+    <section class="viz">
+      <header class="viz__h"><b>박스 구성</b><span>${per > 1 ? `아이콘 1개 = ${per}박스` : "아이콘 1개 = 1박스"}</span></header>
+      <div class="shelf2">${shelf}</div>
+    </section>
+    <section class="viz">
+      <header class="viz__h"><b>재고 소진 예상</b><span class="num">하루 ${Math.round(daily).toLocaleString()}잔 소비</span></header>
+      <div class="runway" style="--need:${(plan.days / span) * 100}%;--have:${(covers / span) * 100}%">
+        <div class="runway__bar"><i class="runway__have"></i><i class="runway__need" title="계획 기간"></i></div>
+        <span class="runway__flag num">계획 ${plan.days}일</span>
+        <div class="runway__ticks num">${ticks.map((t) => `<span>${t}일</span>`).join("")}</div>
+      </div>
+      <p class="runway__note">근무일 기준 <b class="num">${covers}일</b> 버팁니다 · 여유 <b class="num">${spare.toLocaleString()}개</b><br>다음 발주 권장 <b class="num">${addWorkdays(Math.max(1, covers - 2))}</b></p>
+    </section>
+    <section class="viz">
+      <header class="viz__h"><b>비용 비중</b><span class="num">${won(r.t.total)}</span></header>
+      <div class="costbar">${cost.map((c) => `<i class="tone-${c.row.t.tone}" style="flex:${c.amt}"></i>`).join("")}</div>
+      <ul class="costlist">${cost.map((c) => `<li><i class="sw tone-${c.row.t.tone}"></i><span>${esc(c.row.t.label)}</span><b class="num">${Math.round((c.amt / sum) * 100)}%</b><small class="num">잔당 ${won(c.row.p.unitPrice)}</small></li>`).join("")}</ul>
+    </section>`;
 }
 function planOrderHtml(r) {
   return `<p class="step__title">발주서</p>
@@ -852,7 +890,7 @@ function renderPlanner() {
       </article>
       <article class="step">
         <div class="step__card step__card--viz"><div id="planStats">${planStatsHtml(r)}</div></div>
-        <div class="step__cap"><b>Step 2</b><span>필요한 양을 계산해 종류별 구성을 한눈에 봅니다.</span></div>
+        <div class="step__cap"><b>Step 2</b><span>박스 구성·재고 소진일·비용 비중을 한눈에 봅니다.</span></div>
       </article>
       <article class="step">
         <div class="step__card" id="planOrder">${planOrderHtml(r)}</div>
