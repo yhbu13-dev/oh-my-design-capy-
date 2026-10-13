@@ -287,14 +287,12 @@ function openProduct(p) {
   });
   sheet = { type: "product", p, opts, qty: 1 };
   openSheet(p.category, productBody(p), productFoot());
-  if (TS3D) TS3D.ready.then(() => { try { $(".pd3d__mount")?.appendChild(TS3D.viewer(info3d(p))); } catch { $(".pd3d")?.classList.remove("is-3d"); } });
 }
 function productBody(p) {
   const { opts } = sheet;
   const comp = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");
   return `
-    <div class="pd__media${TS3D ? ` pd3d${p.ownPhoto && !CFG.products3d?.[p.id] ? "" : " is-3d"}` : ""}">
-      ${TS3D ? `<div class="pd3d__mount"></div><span class="pd3d__hint">드래그해서 360° 돌려보기</span><div class="pd3d__switch" role="group" aria-label="보기 방식"><button type="button" data-view="3d" aria-pressed="${!p.ownPhoto || !!CFG.products3d?.[p.id]}">3D</button><button type="button" data-view="photo" aria-pressed="${p.ownPhoto && !CFG.products3d?.[p.id]}">사진</button></div>` : ""}
+    <div class="pd__media">
       <img src="${esc(p.image)}" alt="${esc(p.name)}">
     </div>
     <div class="pd__info">
@@ -571,37 +569,6 @@ function packArt(p, size = "") {
   return `<div class="ph tone-${toneOf(p)} ${size}"><svg viewBox="0 0 120 120" class="pk" aria-hidden="true">${PACK[kindOf(p)]}</svg><b>${esc(shortName(p.name))}</b>${spec ? `<span>${esc(spec)}</span>` : ""}</div>`;
 }
 
-/* --- 3D (three3d.js) --- */
-const TS3D = window.TS3D || null;
-function info3d(p) {
-  const core = shortName(p.name); const [brand, rest] = splitBrand(core);
-  const photo = CFG.products3d?.[p.id];
-  return { name: p.name, brand: brand || core, rest: brand ? rest : "", short: core, tone: toneOf(p), kind: photo ? "bottle" : kindOf(p), photo,
-    spec: [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ") };
-}
-let hero3d = null;
-let pallet3d = null; let palletEl = null;
-function mountPallet() {
-  const mount = $("#palletMount");
-  if (!TS3D || !mount) return;
-  if (!palletEl) {
-    palletEl = document.createElement("div");
-    palletEl.className = "pallet3d__stage";
-    palletEl.innerHTML = `<canvas aria-label="발주 수량을 팔레트 위 박스로 표시한 3D 그림"></canvas><p class="pallet3d__info num"></p><span class="pallet3d__hint">${matchMedia("(pointer: fine)").matches ? "드래그해서 돌려보기" : "밀어서 돌려보기"}</span>`;
-    mount.appendChild(palletEl);
-    try { pallet3d = TS3D.pallet(palletEl.querySelector("canvas")); } catch { pallet3d = null; palletEl.remove(); palletEl = null; return; }
-  } else { mount.appendChild(palletEl); }
-  $("#planner").classList.add("has3d");
-  syncPallet();
-}
-function syncPallet() {
-  if (!pallet3d) return;
-  const r = buildPlan();
-  const res = pallet3d.set(r.rows);
-  const boxes = r.rows.reduce((s, x) => s + x.boxes, 0);
-  palletEl.querySelector(".pallet3d__info").innerHTML = `<b>${boxes}박스</b> · 팔레트 ${Math.max(1, Math.ceil(res.shown / 48))}개${res.hidden ? ` <em>+${res.hidden}박스 더</em>` : ""}`;
-}
-
 /* --- 라인 일러스트 (민트 채움 + 진한 선) --- */
 const STAR = (x, y, s) => `<g class="la-m" transform="translate(${x} ${y}) scale(${(s * 0.024).toFixed(4)}) translate(-70 -130)"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></g>`; // 로고 바람개비
 const LINE = {
@@ -716,14 +683,6 @@ function renderBento() {
         : `<button class="tile" type="button" data-word="제로"><b>인기 검색어</b><small>제로 · 탄산수 · 시럽</small>${ico("search")}</button>`}
       <button class="tile" type="button" data-scroll="compare"><b>100ml당 비교</b><small>같은 기준 가격표</small>${ico("bars")}</button>
     </div>`;
-  if (TS3D) {
-    const cv = document.createElement("canvas");
-    cv.className = "pcard__canvas"; cv.setAttribute("aria-hidden", "true");
-    $("#pcardMedia").appendChild(cv);
-    TS3D.ready.then(() => {
-      try { hero3d = TS3D.hero(cv, []); $("#pcardMedia").classList.add("has3d"); showHero(heroIdx, true); } catch { cv.remove(); }
-    });
-  }
   showHero(0);
   const card = $("#pcard");
   const stop = () => clearInterval(heroTimer);
@@ -732,19 +691,17 @@ function renderBento() {
   card.addEventListener("focusin", stop); card.addEventListener("focusout", start);
   start();
 }
-function showHero(i, only3d = false) {
+function showHero(i) {
   heroIdx = i;
   const it = heroItems[i]; if (!it) return;
   const p = it.p;
-  if (hero3d) hero3d.show(info3d(p));
-  if (only3d) return;
   $("#pcard").dataset.id = p.id;
   const media = $("#pcardMedia");
   media.querySelectorAll(".pcard__img, .ph").forEach((n) => n.remove());
   const img = document.createElement("img");
   img.className = "pcard__img"; img.alt = p.name; img.src = p.image;
   media.prepend(img);
-  media.classList.toggle("photo", p.ownPhoto && !CFG.products3d?.[p.id]); // 사진만 있으면 사진, 실사 3D가 있으면 3D
+  media.classList.toggle("photo", p.ownPhoto); // 직접 올린 사진은 잘리지 않게
   const t = typeOf(p);
   const similar = state.products.filter((q) => q !== p && !q.soldOut && typeOf(q) === t && q.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice).slice(0, 3);
   const spec = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");
@@ -866,14 +823,13 @@ function updatePlan() {
   const r = buildPlan();
   $("#planStats").innerHTML = planStatsHtml(r);
   $("#planOrder").innerHTML = planOrderHtml(r);
-  syncPallet();
 }
 function renderPlanner() {
   const r = buildPlan();
   $("#planner").innerHTML = `
     <div class="planner__head">
       <div><span class="tag tag--mint">HOW IT WORKS</span><h2 id="plannerTitle">탕비실 음료,<br>3단계면 발주 끝.</h2></div>
-      <p>인원·기간·종류만 고르면 가성비 좋은 박스로 발주서를 짜고, 팔레트에 쌓아 보여드립니다. 1인 하루 ${plan.perDay}잔 기준.</p>
+      <p>인원·기간·종류만 고르면 가성비 좋은 박스로 발주서를 짜 드립니다. 1인 하루 ${plan.perDay}잔 기준.</p>
     </div>
     <div class="steps">
       <article class="step">
@@ -895,15 +851,14 @@ function renderPlanner() {
         <div class="step__cap"><b>Step 1</b><span>인원·기간·마실 종류를 고릅니다.</span></div>
       </article>
       <article class="step">
-        <div class="step__card step__card--viz"><div class="pallet3d" id="palletMount"></div><div id="planStats">${planStatsHtml(r)}</div></div>
-        <div class="step__cap"><b>Step 2</b><span>필요한 양을 박스로 계산해 팔레트에 쌓아 봅니다.</span></div>
+        <div class="step__card step__card--viz"><div id="planStats">${planStatsHtml(r)}</div></div>
+        <div class="step__cap"><b>Step 2</b><span>필요한 양을 계산해 종류별 구성을 한눈에 봅니다.</span></div>
       </article>
       <article class="step">
         <div class="step__card" id="planOrder">${planOrderHtml(r)}</div>
         <div class="step__cap"><b>Step 3</b><span>발주서를 확인하고 그대로 장바구니에 담습니다.</span></div>
       </article>
     </div>`;
-  mountPallet();
 }
 
 /* --- 오늘의 할인 / 가격 비교 / 발주 표 --- */
@@ -1108,8 +1063,6 @@ function bind() {
     if (rm && c.type === "checkout") { keepDraft(); setQty(c.items, rm.dataset.remove, 0); if (c.source === "cart") { state.cart = c.items.map((x) => ({ ...x })); commitCart(); } return renderCheckout(); }
     const pay = t.closest("[data-pay]");
     if (pay && c.type === "checkout") { keepDraft(); c.pay = pay.dataset.pay; return renderCheckout(); }
-    const vw = t.closest("[data-view]");
-    if (vw) { const box = vw.closest(".pd3d"); box.classList.toggle("is-3d", vw.dataset.view === "3d"); box.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", b === vw)); return; }
     const cp = t.closest("[data-copy]");
     if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast("계좌번호를 복사했어요"), () => toast(cp.dataset.copy)); return; }
 
@@ -1142,31 +1095,7 @@ function renderFooter() {
     </div>`;
 }
 
-// 마우스를 따라 기울어지는 입체 효과
-function bindTilt() {
-  if (!matchMedia("(pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const SEL = ".item__media, .promo, .caticons button, .tile, .pcard, .feat, .dl, .step__card";
-  let cur = null;
-  const reset = (el) => { el.style.removeProperty("--rx"); el.style.removeProperty("--ry"); el.classList.remove("is-tilt"); };
-  document.addEventListener("pointermove", (e) => {
-    const el = e.target.closest?.(SEL);
-    if (cur && cur !== el) { reset(cur); cur = null; }
-    if (!el) return;
-    cur = el;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width; const y = (e.clientY - r.top) / r.height;
-    const k = el.matches(".pcard, .step__card") ? 2.5 : el.matches(".tile, .feat, .dl") ? 6 : 9;
-    el.classList.add("is-tilt");
-    el.style.setProperty("--rx", `${((0.5 - y) * k).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${((x - 0.5) * k).toFixed(2)}deg`);
-    el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`);
-    el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
-  }, { passive: true });
-  document.addEventListener("pointerleave", () => cur && reset(cur));
-}
-
 (async function init() {
-  bindTilt();
   bindImageFallback();
   bind();
   renderFooter();

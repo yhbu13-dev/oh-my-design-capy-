@@ -8,13 +8,9 @@ window.STORE_CONFIG = {
   freeShippingOver: null,
   // 오늘 출발 마감 시각 (한국 시간). twostar.net 상품 페이지의 '오늘 출발' 카운트다운 기준. 끄려면 "".
   todayShipCutoff: "23:00",
-  // 직접 올린 상품 사진 (상품번호 → 파일). 상품을 다시 가져와도 유지되고, 3D 대신 이 사진을 먼저 보여준다.
+  // 직접 올린 상품 사진 (상품번호 → 파일). 상품을 다시 가져와도 유지된다.
   productImages: {
     "1117": "assets/products/1117.webp", // 롯데 트레비 플레인 500ml x 20페트
-  },
-  // 실사 3D: 사진 속 병 몸통을 3D 페트병에 감는다. cx·r = 몸통 중심 x와 반지름(px), top·bottom = 초록 몸통의 위·아래 y.
-  products3d: {
-    "1117": { src: "assets/products/1117.webp", cx: 300, r: 60, top: 230, bottom: 516, band: [246, 371], label: [303, 308, 54, 60], body: "#01954a", cap: "#f2f4f3" },
   },
   // 결제 수단 노출 순서. 첫 번째가 기본 선택.
   payMethods: [

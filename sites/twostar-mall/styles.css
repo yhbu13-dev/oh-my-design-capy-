@@ -171,10 +171,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .pcard { position: relative; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 12px; display: flex; flex-direction: column; min-width: 0; }
 .pcard__media { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: radial-gradient(90% 80% at 50% 90%, var(--mint-2), var(--canvas) 72%); }
 .pcard__media .pcard__img, .pcard__media .ph { width: 100%; height: 100%; object-fit: cover; }
-.pcard__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-@media (pointer: fine) { .pcard__canvas { cursor: grab; } .pcard__canvas.is-grab { cursor: grabbing; } }
-.pcard__media.has3d .pcard__img, .pcard__media.has3d .ph { visibility: hidden; }
-.pcard__body { padding: 14px 6px 4px; display: grid; gap: 0; animation: fadein .45s ease; }
+@media (pointer: fine) { .pcard__body { padding: 14px 6px 4px; display: grid; gap: 0; animation: fadein .45s ease; }
 @keyframes fadein { from { opacity: 0; transform: translateY(6px); } }
 .pcard__head { text-align: center; display: grid; justify-items: center; gap: 6px; padding-bottom: 14px; }
 .pcard__head h3 { margin: 4px 0 0; font-size: 18px; font-weight: 700; letter-spacing: -0.03em; word-break: keep-all; }
@@ -388,7 +385,6 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stats small { font-size: 12px; font-weight: 500; color: var(--ink-2); margin-left: 1px; }
 .waffle { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; padding: 14px 4px 4px; }
 .waffle i { aspect-ratio: 1; border-radius: 50%; background: var(--tc); box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
-.planner.has3d .waffle { display: none; }
 .order { list-style: none; margin: 0; padding: 0; }
 .order li { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 11px 0; border-top: 1px solid var(--rule); }
 .order li .sw { margin-top: 6px; }
@@ -611,48 +607,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
 
 
-/* ================= 3D ================= */
-/* 계산기 팔레트 */
-.planner__right { display: grid; gap: 14px; min-width: 0; }
-.pallet3d:empty { display: none; }
-.pallet3d__stage { position: relative; height: 300px; border-radius: 14px; overflow: hidden; background:
-  radial-gradient(120% 90% at 50% 100%, color-mix(in srgb, var(--blue) 10%, var(--paper)), var(--paper) 70%); box-shadow: inset 0 0 0 1px var(--rule); }
-@media (min-width: 960px) { .pallet3d__stage { height: 340px; } }
-.pallet3d__stage canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
-.pallet3d__stage canvas.is-grab { cursor: grabbing; }
-.pallet3d__info { position: absolute; left: 14px; top: 12px; margin: 0; font-size: 13px; color: var(--ink-2); background: color-mix(in srgb, var(--paper) 85%, transparent); padding: 6px 10px; border-radius: 999px; backdrop-filter: blur(6px); }
-.pallet3d__info b { color: var(--ink); }
-.pallet3d__info em { font-style: normal; color: var(--blue); font-weight: 700; margin-left: 4px; }
-.pallet3d__hint { position: absolute; right: 12px; bottom: 10px; font-size: 11px; color: var(--ink-3); pointer-events: none; }
-.planner.has3d .waffle { display: none; }
-
-/* 상품 360° */
-.pd3d { position: relative; background: radial-gradient(90% 80% at 50% 85%, color-mix(in srgb, var(--blue) 9%, var(--paper)), var(--tint) 75%); }
-.pd3d__mount, .pd3d__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.pd3d__canvas { display: block; cursor: grab; }
-.pd3d__canvas.is-grab { cursor: grabbing; }
-.pd3d.is-3d > img, .pd3d.is-3d > .ph { visibility: hidden; }
-.pd3d:not(.is-3d) .pd3d__mount, .pd3d:not(.is-3d) .pd3d__hint { display: none; }
-.pd3d__hint { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); font-size: 11px; color: var(--ink-3); background: color-mix(in srgb, var(--paper) 80%, transparent); padding: 4px 10px; border-radius: 999px; pointer-events: none; white-space: nowrap; z-index: 2; }
-.pd3d__switch { position: absolute; right: 12px; top: 12px; z-index: 2; display: flex; background: color-mix(in srgb, var(--paper) 88%, transparent); border-radius: 999px; padding: 3px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-.pd3d__switch button { border: 0; background: none; height: 28px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--ink-3); }
-.pd3d__switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-@media (prefers-reduced-motion: reduce) { .item__media, .promo, .caticons button, .rankrow__img, .today, .sheetcard { transform: none; } }
-
-/* 기울기 (PC): 포인터 위치 → --rx/--ry, 반사광 → --mx/--my */
-.item__media, .promo, .caticons button, .tile, .pcard, .feat, .dl, .step__card {
-  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .3s, border-color .2s;
-}
-.is-tilt { transition: transform .08s linear, box-shadow .3s, border-color .2s; }
-.item__media.is-tilt, .promo.is-tilt, .tile.is-tilt, .feat.is-tilt { box-shadow: 0 18px 36px -14px rgba(15, 60, 95, .35); }
-.item__media::after, .promo::after, .tile::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity .3s; background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.4), transparent 55%); z-index: 3; }
-.is-tilt::after { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .item__media, .promo, .caticons button, .tile, .pcard, .feat, .dl, .step__card { transform: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 @media (max-width: 760px) { html { scroll-padding-top: calc(150px + env(safe-area-inset-top, 0px)); } }
 @media (hover: none), (max-width: 900px) { .dash__tools > span:last-child { display: none; } }
 
 .hero h1 em { font-style: normal; color: var(--brand); }
-.pcard__media.photo .pcard__canvas { display: none; }
-.pcard__media.has3d.photo .pcard__img { visibility: visible; }
-.pcard__media.photo .pcard__img { object-fit: contain; background: #fff; }
+.pcard__media.photo .pcard__media.photo .pcard__img { object-fit: contain; background: #fff; }
