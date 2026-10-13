@@ -42,8 +42,38 @@
   </div>
 
   <main class="shelf">
-    <section class="promos" id="promos" aria-label="기획전"></section>
-    <div class="shelf__bar">
+    <div id="home">
+      <section class="hero" aria-label="추천">
+        <div class="hero__stage">
+          <div class="slides" id="slides"></div>
+          <div class="dots" id="dots" role="tablist" aria-label="배너 넘기기"></div>
+        </div>
+        <aside class="today" id="today" aria-label="오늘 출발"></aside>
+      </section>
+
+      <nav class="caticons" id="catIcons" aria-label="카테고리 바로가기"></nav>
+
+      <section class="sec planner" id="planner" aria-labelledby="plannerTitle"></section>
+
+      <section class="sec" aria-labelledby="dealTitle">
+        <header class="sec__head"><h2 id="dealTitle">오늘의 할인</h2><button class="sec__more" type="button" data-goto-coll="deal">전체보기</button></header>
+        <ul class="rail" id="deals"></ul>
+      </section>
+
+      <section class="sec compare" id="compare" aria-labelledby="compareTitle"></section>
+
+      <section class="sec" aria-labelledby="rankTitle">
+        <header class="sec__head"><h2 id="rankTitle">투스타 추천 TOP 10</h2></header>
+        <div class="pills" id="rankTabs" role="tablist"></div>
+        <ol class="rank" id="rank"></ol>
+      </section>
+
+      <section class="promos" id="promos" aria-label="기획전"></section>
+
+      <section class="biz" id="biz" aria-label="대량 구매 상담"></section>
+    </div>
+
+    <div class="shelf__bar" id="listTop">
       <p class="shelf__count" id="resultCount"></p>
       <div class="shelf__tools">
         <button class="toggle" id="freeOnly" type="button" aria-pressed="false">무료배송만</button>

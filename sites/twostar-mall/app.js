@@ -147,13 +147,22 @@ function renderHero() {
 function startCountdown() {
   const el = $("#cutoff"); if (!el) return;
   const [hh, mm] = String(CFG.todayShipCutoff || "").split(":").map(Number);
-  if (!Number.isFinite(hh)) { el.closest(".strip__ship").hidden = true; return; }
+  if (!Number.isFinite(hh)) { el.closest(".strip__ship").hidden = true; $("#today .today__clock")?.remove(); return; }
+  const cut = hh * 3600 + (mm || 0) * 60;
   const tick = () => {
     const kst = new Date(Date.now() + 9 * 3600e3);
-    const left = (hh * 3600 + (mm || 0) * 60) - (kst.getUTCHours() * 3600 + kst.getUTCMinutes() * 60 + kst.getUTCSeconds());
-    if (left <= 0) { el.closest(".strip__ship").innerHTML = `오늘 주문 마감 · 지금 결제하면 <b>내일 출발</b>`; return clearInterval(t); }
+    const now = kst.getUTCHours() * 3600 + kst.getUTCMinutes() * 60 + kst.getUTCSeconds();
+    const left = cut - now;
+    if (left <= 0) {
+      el.closest(".strip__ship").innerHTML = `오늘 주문 마감 · 지금 결제하면 <b>내일 출발</b>`;
+      document.querySelectorAll("[data-cutoff]").forEach((x) => (x.textContent = "내일 출발"));
+      return clearInterval(t);
+    }
     const f = (n) => String(n).padStart(2, "0");
-    el.textContent = `${f(Math.floor(left / 3600))}:${f(Math.floor(left / 60) % 60)}:${f(left % 60)}`;
+    const txt = `${f(Math.floor(left / 3600))}:${f(Math.floor(left / 60) % 60)}:${f(left % 60)}`;
+    el.textContent = txt;
+    document.querySelectorAll("[data-cutoff]").forEach((x) => (x.textContent = txt));
+    document.querySelectorAll("[data-dayprogress]").forEach((x) => (x.style.width = `${Math.min(100, (now / cut) * 100)}%`));
   };
   const t = setInterval(tick, 1000); tick();
 }
@@ -220,7 +229,7 @@ function renderGrid() {
   const coll = COLLECTIONS.find((c) => c.id === state.coll);
   $("#resultCount").innerHTML = coll
     ? `<button class="coll-chip" type="button" data-clear-coll aria-label="기획전 해제">${esc(coll.title.replace("\n", " "))}<span aria-hidden="true">✕</span></button> <b>${list.length.toLocaleString()}</b>개`
-    : `<b>${list.length.toLocaleString()}</b>개 상품`;
+    : isHome() ? `<span class="shelf__title">전체 상품</span> <b>${list.length.toLocaleString()}</b>개` : `<b>${list.length.toLocaleString()}</b>개 상품`;
   $("#empty").hidden = list.length > 0;
   $("#more").hidden = list.length <= state.limit;
   $("#grid").innerHTML = list.slice(0, state.limit).map(itemHtml).join("");
@@ -511,45 +520,349 @@ function bindImageFallback() {
     if (!(img instanceof HTMLImageElement) || img.dataset.failed) return;
     img.dataset.failed = "1";
     if (img.closest(".desc")) { img.remove(); return; }
-    const p = state.byId.get(img.closest(".item")?.dataset.id) || state.products.find((x) => x.name === img.alt) || (sheet?.type === "product" ? sheet.p : null);
-    const ph = document.createElement("div");
-    ph.className = "ph" + (img.closest(".line__img") ? " ph--sm" : "");
-    const spec = p ? [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ") : "";
-    ph.innerHTML = `<b>${esc(p ? shortName(p.name) : "투스타몰")}</b>${spec ? `<span>${esc(spec)}</span>` : ""}`;
-    img.replaceWith(ph);
+    const p = state.byId.get(img.closest("[data-id]")?.dataset.id) || state.products.find((x) => x.name === img.alt) || (sheet?.type === "product" ? sheet.p : null);
+    if (!p) { img.style.visibility = "hidden"; return; }
+    const small = img.closest(".line__img, .rankrow__img");
+    const wrap = document.createElement("div");
+    wrap.innerHTML = packArt(p, small ? "ph--sm" : "");
+    img.replaceWith(wrap.firstElementChild);
   }, true);
 }
+
+/* ================= 홈 화면 ================= */
+const DRINK_CATS = ["음료수", "커피음료", "과즙/어린이음료"];
+const TYPES = [
+  { id: "soda", label: "탄산", tone: "red", re: /콜라|사이다|스프라이트|환타|탄산|트레비|펩시|칠성|웰치스|몬스터|핫식스|토닉|진저|소다|에너지/ },
+  { id: "coffee", label: "커피", tone: "brown", re: /커피|아메리카노|라떼|콜드브루|카누|맥심|티오피|조지아|칸타타|바리스타|더블샷|프렌치카페|에스프레소/ },
+  { id: "tea", label: "차·이온·물", tone: "green", re: /차(?![가-힣])|녹차|보리|옥수수|헛개|이온|게토레이|포카리|파워에이드|토레타|생수|삼다수|워터|아이시스|광천수|비타|홍삼/ },
+  { id: "juice", label: "주스", tone: "orange", re: /주스|쥬스|과즙|사과|오렌지|포도|망고|자연은|델몬트|썬키스트|토마토|배|복숭아|알로에|매실|자몽|레몬/ },
+];
+const typeOf = (p) => (DRINK_CATS.includes(p.category) ? TYPES.find((t) => t.re.test(p.name)) || null : null);
+const mlOf = (p) => { const m = p.pack.volume.match(/^([\d.]+)(ml|L)$/); return m ? Number(m[1]) * (m[2] === "L" ? 1000 : 1) : 0; };
+const per100 = (p) => (p.pack.count > 1 && mlOf(p) ? (p.salePrice / (p.pack.count * mlOf(p))) * 100 : null);
+
+const CAT_TONE = { "음료수": "red", "커피음료": "brown", "시럽/소스/파우더": "amber", "과즙/어린이음료": "orange", "설탕/차/청류/액상": "green", "원두/믹스커피/스틱": "brown", "건강기능식품": "teal", "코스트코": "blue" };
+const toneOf = (p) => CAT_TONE[p.category] || "slate";
+function kindOf(p) {
+  const n = p.name;
+  if (/컵|장갑|빨대|일회용|봉투/.test(n)) return "cup";
+  if (/믹스|스틱|티백|\d\s*T\b|\d+티|\d+포|크래커|젤리|과자|빵|크로와상/.test(n)) return "box";
+  if (/캔/.test(n) || (mlOf(p) && mlOf(p) <= 355 && !/병|페트/.test(n))) return "can";
+  if (/병|페트|\dL|시럽|원액|청/.test(n) || mlOf(p) > 355) return "bottle";
+  if (/파우더|\d+\s*(g|kg)\b/i.test(n)) return "pouch";
+  return "box";
+}
+// 사진이 없을 때 쓰는 포장 실루엣
+const PACK = {
+  can: `<rect x="34" y="18" width="52" height="86" rx="9" class="pk-b"/><ellipse cx="60" cy="20" rx="26" ry="6" class="pk-t"/><rect x="34" y="46" width="52" height="30" class="pk-l"/>`,
+  bottle: `<path d="M52 8h16v14c0 6 14 10 14 24v58a8 8 0 0 1-8 8H46a8 8 0 0 1-8-8V46c0-14 14-18 14-24z" class="pk-b"/><rect x="50" y="4" width="20" height="9" rx="2" class="pk-t"/><rect x="38" y="58" width="44" height="30" class="pk-l"/>`,
+  box: `<path d="M26 34l34-14 34 14v64l-34 14-34-14z" class="pk-b"/><path d="M26 34l34 14 34-14-34-14z" class="pk-t"/><path d="M60 48v64" class="pk-e"/><rect x="32" y="60" width="22" height="16" transform="skewY(22) translate(0 -22)" class="pk-l"/>`,
+  cup: `<path d="M34 22h52l-7 88H41z" class="pk-b"/><rect x="30" y="16" width="60" height="10" rx="3" class="pk-t"/><path d="M38 50h44l-2 22H40z" class="pk-l"/>`,
+  pouch: `<path d="M36 14h48l4 12-4 6v70a6 6 0 0 1-6 6H42a6 6 0 0 1-6-6V32l-4-6z" class="pk-b"/><rect x="36" y="14" width="48" height="8" class="pk-t"/><rect x="36" y="56" width="48" height="26" class="pk-l"/>`,
+};
+function packArt(p, size = "") {
+  const spec = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");
+  return `<div class="ph tone-${toneOf(p)} ${size}"><svg viewBox="0 0 120 120" class="pk" aria-hidden="true">${PACK[kindOf(p)]}</svg><b>${esc(shortName(p.name))}</b>${spec ? `<span>${esc(spec)}</span>` : ""}</div>`;
+}
+
+/* --- 메인 배너 --- */
+let slideTimer = null; let slideIdx = 0;
+function renderSlides() {
+  const drinks = state.products.filter((p) => !p.soldOut && !p.options.length);
+  const best = drinks.find((p) => p.badge === "BEST" && typeOf(p)) || drinks.filter(typeOf).sort((a, b) => a.rank - b.rank)[0] || drinks[0];
+  const deal = [...drinks].filter((p) => typeOf(p)).sort((a, b) => rateOf(b) - rateOf(a))[0];
+  const cheap = [...drinks].filter((p) => typeOf(p) && p.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice)[0];
+  const slides = [
+    best && { tone: "navy", eyebrow: "이번 주 BEST", title: shortName(best.name), p: best, line: best.unitPrice ? `${best.pack.unit}당 ${won(best.unitPrice)}` : "" },
+    deal && { tone: "red", eyebrow: "오늘 가장 크게 내린 가격", title: `${rateOf(deal)}% 할인`, p: deal, line: shortName(deal.name) },
+    { tone: "blue", eyebrow: "사무실 총무님을 위한", title: "탕비실 음료,\n인원만 넣으면 계산 끝", cta: "계산해 보기", go: "planner" },
+    cheap && { tone: "sun", eyebrow: "한 박스로 아끼기", title: `한 ${cheap.pack.unit} ${won(cheap.unitPrice)}`, p: cheap, line: shortName(cheap.name) },
+  ].filter(Boolean);
+  $("#slides").innerHTML = slides.map((s, i) => `
+    <article class="slide slide--${s.tone}" ${s.p ? `data-id="${esc(s.p.id)}"` : ""} aria-roledescription="slide" aria-label="${i + 1} / ${slides.length}">
+      <div class="slide__text">
+        <span class="slide__eyebrow">${esc(s.eyebrow)}</span>
+        <h2 class="slide__title">${esc(s.title).replace("\n", "<br>")}</h2>
+        ${s.p ? `<p class="slide__line">${esc(s.line)}</p><p class="slide__price">${rateOf(s.p) ? `<s>${won(s.p.price)}</s>` : ""}<b>${won(s.p.salePrice)}</b></p>` : ""}
+        <div class="slide__cta">
+          ${s.p ? `<button type="button" class="slide__btn" data-slide-add>담기</button><button type="button" class="slide__link" data-slide-open>자세히</button>` : `<button type="button" class="slide__btn" data-scroll="${s.go}">${esc(s.cta)}</button>`}
+        </div>
+      </div>
+      <div class="slide__art">${s.p ? `<div class="slide__img"><img src="${esc(s.p.image)}" alt="${esc(s.p.name)}"></div>` : plannerArt()}</div>
+    </article>`).join("");
+  $("#dots").innerHTML = slides.map((_, i) => `<button type="button" role="tab" class="dot" data-dot="${i}" aria-label="${i + 1}번 배너"><i></i></button>`).join("");
+  goSlide(0, false);
+  const stage = $(".hero__stage");
+  const stop = () => clearInterval(slideTimer);
+  const start = () => { stop(); if (!matchMedia("(prefers-reduced-motion: reduce)").matches) slideTimer = setInterval(() => goSlide((slideIdx + 1) % slides.length), 5000); };
+  stage.addEventListener("pointerenter", stop); stage.addEventListener("pointerleave", start);
+  stage.addEventListener("touchstart", stop, { passive: true });
+  $("#slides").addEventListener("scroll", () => {
+    const i = Math.round($("#slides").scrollLeft / $("#slides").clientWidth);
+    if (i !== slideIdx) { slideIdx = i; markDots(); }
+  }, { passive: true });
+  start();
+}
+function goSlide(i, smooth = true) {
+  slideIdx = i;
+  const el = $("#slides");
+  el.scrollTo({ left: i * el.clientWidth, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "auto" });
+  markDots();
+}
+function markDots() {
+  document.querySelectorAll("#dots .dot").forEach((d, k) => {
+    d.setAttribute("aria-selected", k === slideIdx);
+    const bar = d.querySelector("i"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "";
+  });
+}
+function plannerArt() {
+  return `<div class="slide__waffle">${Array.from({ length: 48 }, (_, i) => `<i class="tone-${["red", "brown", "green", "red", "orange", "brown"][i % 6]}"></i>`).join("")}</div>`;
+}
+
+/* --- 오늘 출발 패널 --- */
+function renderToday() {
+  const orders = store.get("ts.orders", []);
+  const last = orders[0];
+  const words = ["제로", "탄산수", "커피믹스", "시럽", "이온음료", "종이컵", "아이스티", "생수"];
+  $("#today").innerHTML = `
+    <div class="today__clock">
+      <span class="today__label"><span class="strip__dot" aria-hidden="true"></span>오늘 출발 마감까지</span>
+      <strong class="today__time num" data-cutoff>--:--:--</strong>
+      <div class="today__track" aria-hidden="true"><i data-dayprogress></i></div>
+      <span class="today__note">${esc(CFG.todayShipCutoff || "")} 전 결제 시 오늘 발송 · 택배</span>
+    </div>
+    ${last ? `<div class="today__re">
+      <span class="today__label">지난 주문</span>
+      <p>${esc(last.items[0].name)}${last.items.length > 1 ? ` 외 ${last.items.length - 1}건` : ""}</p>
+      <button type="button" class="today__btn" data-reorder>그대로 다시 담기 · ${won(last.subtotal)}</button>
+    </div>` : ""}
+    <div class="today__words">
+      <span class="today__label">많이 찾는 검색어</span>
+      <div>${words.map((w, i) => `<button type="button" data-word="${esc(w)}"><em>${i + 1}</em>${esc(w)}</button>`).join("")}</div>
+    </div>`;
+}
+
+/* --- 카테고리 아이콘 --- */
+const CAT_ICON = {
+  "음료수": `<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M8 8h8M8 16h8"/>`,
+  "커피음료": `<path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3c0 1.5 1 1.5 1 3M12 3c0 1.5 1 1.5 1 3"/>`,
+  "시럽/소스/파우더": `<path d="M9 9h6v11a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M10 9V6h4v3M12 6V3h4"/>`,
+  "과즙/어린이음료": `<path d="M7 8h10v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M7 8l2-3h6l2 3M14 5l2-3"/>`,
+  "설탕/차/청류/액상": `<path d="M6 8h12v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/><path d="M5 5h14v3H5z"/>`,
+  "원두/믹스커피/스틱": `<ellipse cx="12" cy="12" rx="6" ry="8" transform="rotate(30 12 12)"/><path d="M9 6c3 3 3 9 6 12"/>`,
+  "생활잡화": `<path d="M8 10h8v10H8zM10 10V6h4v4M14 7h3"/>`,
+  "코스트코": `<path d="M3 10l9-6 9 6v10H3z"/><path d="M8 20v-6h8v6"/>`,
+  "종이컵/일회용품": `<path d="M6 5h12l-1.5 15h-9z"/><path d="M6.5 9h11"/>`,
+  "건강기능식품": `<rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M10 9.5l4 5"/>`,
+};
+function renderCatIcons() {
+  const count = {};
+  state.products.forEach((p) => (count[p.category] = (count[p.category] || 0) + 1));
+  const cats = Object.keys(count).filter((c) => c !== "기타").sort((a, b) => count[b] - count[a]);
+  $("#catIcons").innerHTML = cats.map((c) => `<button type="button" data-cat-ico="${esc(c)}"><span class="ci tone-${CAT_TONE[c] || "slate"}"><svg viewBox="0 0 24 24" aria-hidden="true">${CAT_ICON[c] || `<rect x="5" y="5" width="14" height="14" rx="3"/>`}</svg></span><b>${esc(c.split("/")[0])}</b><small>${count[c]}</small></button>`).join("");
+}
+
+/* --- 탕비실 계산기 --- */
+const PERIODS = [{ id: 5, label: "1주" }, { id: 10, label: "2주" }, { id: 22, label: "한 달" }];
+const plan = { people: 20, days: 10, perDay: 1.5, types: ["soda", "coffee", "tea"], swap: {} };
+function candidates(typeId) {
+  return state.products
+    .filter((p) => !p.soldOut && !p.options.length && typeOf(p)?.id === typeId && p.pack.count >= 10 && mlOf(p) >= 150 && mlOf(p) <= 600)
+    .sort((a, b) => (feeOf(a) > 0) - (feeOf(b) > 0) || a.unitPrice - b.unitPrice);
+}
+function buildPlan() {
+  const need = Math.ceil(plan.people * plan.days * plan.perDay);
+  const types = plan.types.length ? plan.types : ["soda"];
+  const share = Math.ceil(need / types.length);
+  const rows = types.map((t) => {
+    const list = candidates(t);
+    if (!list.length) return null;
+    const p = list[(plan.swap[t] || 0) % list.length];
+    const boxes = Math.max(1, Math.ceil(share / p.pack.count));
+    return { t: TYPES.find((x) => x.id === t), p, boxes, units: boxes * p.pack.count, alt: list.length };
+  }).filter(Boolean);
+  const items = rows.map((r) => ({ key: keyOf(r.p.id, {}), id: r.p.id, opts: {}, qty: r.boxes }));
+  const t = totals(items);
+  const units = rows.reduce((s, r) => s + r.units, 0);
+  return { need, rows, items, t, units, perPersonDay: t.total / (plan.people * plan.days) };
+}
+function planResultHtml() {
+  const r = buildPlan();
+  const cells = 60;
+  const waffle = r.rows.flatMap((row) => Array.from({ length: Math.round((row.units / r.units) * cells) }, () => row.t.tone)).slice(0, cells);
+  while (waffle.length < cells) waffle.push(r.rows.at(-1)?.t.tone || "slate");
+  return `<div class="sheetcard">
+        <header class="sheetcard__head">
+          <div><span>예상 소비량</span><strong class="num">${r.need.toLocaleString()}잔</strong></div>
+          <div><span>발주 수량</span><strong class="num">${r.units.toLocaleString()}개</strong></div>
+          <div><span>1인 1일</span><strong class="num">${won(r.perPersonDay)}</strong></div>
+        </header>
+        <div class="waffle" aria-hidden="true">${waffle.map((t) => `<i class="tone-${t}"></i>`).join("")}</div>
+        <ul class="order">
+          ${r.rows.map((row) => `<li data-id="${esc(row.p.id)}">
+            <i class="sw tone-${row.t.tone}"></i>
+            <div class="order__name"><b>${esc(row.t.label)}</b><span>${esc(row.p.name)}</span><small class="num">${row.p.pack.unit}당 ${won(row.p.unitPrice)} · ${row.units}${row.p.pack.unit}</small></div>
+            <div class="order__qty num">${row.boxes}박스</div>
+            <div class="order__sum num">${won(row.p.salePrice * row.boxes)}</div>
+            ${row.alt > 1 ? `<button type="button" class="order__swap" data-pl-swap="${row.t.id}" aria-label="${esc(row.t.label)} 다른 상품으로">바꾸기</button>` : ""}
+          </li>`).join("")}
+        </ul>
+        <footer class="sheetcard__foot">
+          <div><span>합계${r.t.shipping ? ` (배송비 ${won(r.t.shipping)} 포함)` : " · 무료배송"}</span><strong class="num">${won(r.t.total)}</strong></div>
+          <button type="button" class="cta" data-pl-add ${r.rows.length ? "" : "disabled"}>발주서 그대로 담기</button>
+        </footer>
+      </div>`;
+}
+function renderPlanner() {
+  $("#planner").innerHTML = `
+    <div class="planner__intro">
+      <span class="sec__eyebrow">탕비실 음료 계산기</span>
+      <h2 id="plannerTitle">몇 명이 얼마나 마시나요?</h2>
+      <p>인원과 기간만 고르면 가성비 좋은 박스로 발주서를 짜 드려요. 1인 하루 ${plan.perDay}잔 기준.</p>
+    </div>
+    <div class="planner__body">
+      <div class="planner__controls">
+        <div class="ctl">
+          <label for="pl-people">인원 <output class="num">${plan.people}명</output></label>
+          <input type="range" id="pl-people" min="3" max="150" step="1" value="${plan.people}" data-pl="people">
+          <div class="ctl__scale num"><span>3</span><span>50</span><span>100</span><span>150</span></div>
+        </div>
+        <div class="ctl">
+          <span class="ctl__name">기간</span>
+          <div class="seg" role="radiogroup" aria-label="기간">${PERIODS.map((d) => `<button type="button" role="radio" aria-checked="${plan.days === d.id}" data-pl-days="${d.id}">${d.label}<small>${d.id}일</small></button>`).join("")}</div>
+        </div>
+        <div class="ctl">
+          <span class="ctl__name">무엇을 마시나요? <small>여러 개 선택</small></span>
+          <div class="seg seg--multi">${TYPES.map((t) => `<button type="button" aria-pressed="${plan.types.includes(t.id)}" data-pl-type="${t.id}"><i class="sw tone-${t.tone}"></i>${t.label}</button>`).join("")}</div>
+        </div>
+      </div>
+      ${planResultHtml()}
+    </div>`;
+}
+
+/* --- 오늘의 할인 / 가격 비교 / 랭킹 --- */
+function renderDeals() {
+  const list = state.products.filter((p) => !p.soldOut && rateOf(p) >= 15).sort((a, b) => rateOf(b) - rateOf(a)).slice(0, 14);
+  $("#deals").innerHTML = list.map(itemHtml).join("");
+}
+let cmpType = "soda";
+function renderCompare() {
+  const list = state.products.filter((p) => !p.soldOut && typeOf(p)?.id === cmpType && per100(p)).sort((a, b) => per100(a) - per100(b)).slice(0, 8);
+  const max = Math.max(...list.map(per100), 1);
+  const t = TYPES.find((x) => x.id === cmpType);
+  $("#compare").innerHTML = `
+    <header class="sec__head"><h2 id="compareTitle">100ml당 가격, 한눈에 비교</h2></header>
+    <p class="sec__sub">용량이 달라도 같은 기준으로. 막대가 짧을수록 저렴합니다.</p>
+    <div class="pills" role="tablist">${TYPES.map((x) => `<button type="button" role="tab" aria-selected="${x.id === cmpType}" data-cmp="${x.id}">${x.label}</button>`).join("")}</div>
+    <ol class="bars tone-${t.tone}">
+      ${list.map((p, i) => `<li data-id="${esc(p.id)}">
+        <button type="button" class="bars__row" data-act="open">
+          <span class="bars__name">${i === 0 ? `<em>최저</em>` : ""}${esc(p.name)}</span>
+          <span class="bars__track"><i style="width:${Math.max(6, (per100(p) / max) * 100)}%"></i></span>
+          <span class="bars__val num"><b>${won(per100(p))}</b><small>${p.pack.unit}당 ${won(p.unitPrice)}</small></span>
+        </button>
+      </li>`).join("")}
+    </ol>`;
+}
+let rankCat = "전체";
+function renderRank() {
+  const count = {};
+  state.products.forEach((p) => (count[p.category] = (count[p.category] || 0) + 1));
+  const tabs = ["전체", ...Object.keys(count).filter((c) => c !== "기타").sort((a, b) => count[b] - count[a]).slice(0, 5)];
+  $("#rankTabs").innerHTML = tabs.map((c) => `<button type="button" role="tab" aria-selected="${c === rankCat}" data-rank="${esc(c)}">${esc(c.split("/")[0])}</button>`).join("");
+  const list = state.products.filter((p) => !p.soldOut && (rankCat === "전체" || p.category === rankCat)).sort((a, b) => a.rank - b.rank).slice(0, 10);
+  $("#rank").innerHTML = list.map((p, i) => `
+    <li class="item rankrow" data-id="${esc(p.id)}">
+      <span class="rankrow__n num">${i + 1}</span>
+      <button type="button" class="rankrow__img" data-act="open" aria-label="${esc(p.name)}"><img src="${esc(p.image)}" alt="" loading="lazy"></button>
+      <div class="rankrow__text" data-act="open"><p>${esc(p.name)}</p><div class="price">${rateOf(p) ? `<span class="price__rate">${rateOf(p)}%</span>` : ""}<span class="price__now">${won(p.salePrice)}</span></div>${unitHtml(p)}</div>
+      <div class="item__act">${mediaActions(p)}</div>
+    </li>`).join("");
+}
+function renderBiz() {
+  const free = state.products.filter((p) => feeOf(p) === 0).length;
+  const co = CFG.company || {};
+  $("#biz").innerHTML = `
+    <div class="biz__text">
+      <span class="sec__eyebrow">카페 · 사무실 · 단체</span>
+      <h2>정기 납품, 대량 구매는<br>전화 한 통으로</h2>
+      <p>견적부터 세금계산서까지 담당자가 직접 챙깁니다.</p>
+    </div>
+    <dl class="biz__facts">
+      <div><dt>취급 상품</dt><dd class="num">${state.products.length}종</dd></div>
+      <div><dt>무료배송</dt><dd class="num">${free}종</dd></div>
+      <div><dt>당일 출고 마감</dt><dd class="num">${esc(CFG.todayShipCutoff || "-")}</dd></div>
+    </dl>
+    <div class="biz__call"><span>${esc(co.hours || "")}</span><strong class="num">${esc(co.tel || "")}</strong></div>`;
+}
+
+const isHome = () => state.cat === "전체" && !state.coll && !state.q.trim();
+function renderHome() {
+  $("#home").hidden = !isHome();
+  if (!isHome()) return;
+  renderPlanner(); renderDeals(); renderCompare(); renderRank();
+}
+function scrollToList() { $("#listTop").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); }
+
+function bindHome() {
+  $("#home").addEventListener("input", (e) => {
+    if (e.target.dataset.pl === "people") {
+      plan.people = Number(e.target.value);
+      e.target.previousElementSibling.querySelector("output").textContent = `${plan.people}명`;
+      $("#planner .sheetcard").outerHTML = planResultHtml();
+    }
+  });
+  $("#home").addEventListener("click", (e) => {
+    const t = e.target;
+    const d = t.closest("[data-dot]"); if (d) return goSlide(Number(d.dataset.dot));
+    const sc = t.closest("[data-scroll]"); if (sc) return $(`#${sc.dataset.scroll}`).scrollIntoView({ behavior: "smooth", block: "start" });
+    const slide = t.closest(".slide[data-id]");
+    if (slide) { const p = state.byId.get(slide.dataset.id); if (t.closest("[data-slide-add]")) { if (p.options.length) return openProduct(p); addToCart(p.id); return toast("장바구니에 담았어요"); } if (t.closest("[data-slide-open]")) return openProduct(p); }
+    const w = t.closest("[data-word]"); if (w) { $("#q").value = w.dataset.word; state.q = w.dataset.word; state.limit = PAGE; renderAll(); return scrollToList(); }
+    if (t.closest("[data-reorder]")) { const last = store.get("ts.orders", [])[0]; last?.items.forEach((i) => state.byId.has(i.id) && addToCart(i.id, i.options || {}, i.qty)); return toast("지난 주문을 담았어요"); }
+    const ci = t.closest("[data-cat-ico]"); if (ci) { state.cat = ci.dataset.catIco; state.coll = null; state.limit = PAGE; renderAll(); return scrollToList(); }
+    const days = t.closest("[data-pl-days]"); if (days) { plan.days = Number(days.dataset.plDays); return renderPlanner(); }
+    const ty = t.closest("[data-pl-type]"); if (ty) { const id = ty.dataset.plType; plan.types = plan.types.includes(id) ? plan.types.filter((x) => x !== id) : [...plan.types, id]; if (!plan.types.length) plan.types = [id]; return renderPlanner(); }
+    const sw = t.closest("[data-pl-swap]"); if (sw) { plan.swap[sw.dataset.plSwap] = (plan.swap[sw.dataset.plSwap] || 0) + 1; return renderPlanner(); }
+    if (t.closest("[data-pl-add]")) { buildPlan().items.forEach((i) => addToCart(i.id, {}, i.qty)); return toast("발주서를 장바구니에 담았어요"); }
+    const cm = t.closest("[data-cmp]"); if (cm) { cmpType = cm.dataset.cmp; return renderCompare(); }
+    const rk = t.closest("[data-rank]"); if (rk) { rankCat = rk.dataset.rank; return renderRank(); }
+    const gc = t.closest("[data-goto-coll]"); if (gc) { state.coll = gc.dataset.gotoColl; state.limit = PAGE; renderAll(); return scrollToList(); }
+  });
+}
+
+function renderAll() { renderTabs(); renderHero(); renderHome(); renderGrid(); }
 
 /* ---------------- 이벤트 ---------------- */
 function bind() {
   $("#cats").addEventListener("click", (e) => {
     const b = e.target.closest("[data-cat]"); if (!b) return;
     state.cat = b.dataset.cat; state.coll = null; state.limit = PAGE;
-    renderTabs(); renderHero(); renderGrid();
+    renderAll();
     $(`[data-cat="${CSS.escape(state.cat)}"]`)?.scrollIntoView({ inline: "center", block: "nearest" });
     window.scrollTo({ top: Math.min(window.scrollY, $("#cats").offsetTop) });
   });
   $("#promos").addEventListener("click", (e) => {
     const b = e.target.closest("[data-coll]"); if (!b) return;
     state.coll = state.coll === b.dataset.coll ? null : b.dataset.coll; state.cat = "전체"; state.limit = PAGE;
-    renderTabs(); renderHero(); renderGrid();
-    if (state.coll) $(".shelf__bar").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    renderAll();
+    if (state.coll) scrollToList();
   });
   $("#resultCount").addEventListener("click", (e) => {
     if (!e.target.closest("[data-clear-coll]")) return;
-    state.coll = null; state.limit = PAGE; renderTabs(); renderHero(); renderGrid();
+    state.coll = null; state.limit = PAGE; renderAll();
   });
   let qt;
-  $("#q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value; state.limit = PAGE; renderGrid(); }, 120); });
+  $("#q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { const wasHome = isHome(); state.q = e.target.value; state.limit = PAGE; if (wasHome !== isHome()) renderAll(); else renderGrid(); }, 160); });
   $("#sort").addEventListener("change", (e) => { state.sort = e.target.value; state.limit = PAGE; renderGrid(); });
   $("#freeOnly").addEventListener("click", (e) => { state.freeOnly = !state.freeOnly; e.currentTarget.setAttribute("aria-pressed", state.freeOnly); state.limit = PAGE; renderGrid(); });
   const more = () => { state.limit += PAGE; renderGrid(); };
   $("#more").addEventListener("click", more);
   if ("IntersectionObserver" in window) new IntersectionObserver((es) => es[0].isIntersecting && !$("#more").hidden && more(), { rootMargin: "800px" }).observe($("#more"));
 
-  $("#grid").addEventListener("click", (e) => {
+  $(".shelf").addEventListener("click", (e) => {
     const b = e.target.closest("[data-act]"); if (!b) return;
-    const p = state.byId.get(b.closest(".item")?.dataset.id); if (!p) return;
+    const p = state.byId.get(b.closest("[data-id]")?.dataset.id); if (!p) return;
     const act = b.dataset.act;
     if (act === "open") return openProduct(p);
     if (act === "add") { if (p.options.length) return openProduct(p); addToCart(p.id); return toast("장바구니에 담았어요"); }
@@ -614,7 +927,9 @@ function renderFooter() {
   state.products = await loadProducts();
   state.byId = new Map(state.products.map((p) => [p.id, p]));
   state.cart = state.cart.filter((x) => state.byId.has(x.id));
-  renderTabs(); renderHero(); renderGrid(); renderBar();
+  renderSlides(); renderToday(); renderCatIcons(); renderBiz();
+  renderAll(); renderBar();
+  bindHome();
   startCountdown();
   window.addEventListener("resize", renderBar);
 })();
