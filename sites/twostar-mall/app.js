@@ -1135,10 +1135,6 @@ function renderFooter() {
         <p>${[co.address && esc(co.address), co.tel && `고객센터 ${esc(co.tel)}`, co.hours && esc(co.hours), co.email && esc(co.email)].filter(Boolean).join(" · ")}</p>
         ${(CFG.bankAccounts || []).length ? `<p>무통장입금 ${CFG.bankAccounts.map((b) => `${esc(b.bank)} ${esc(b.number)}`).join(" / ")} (예금주 ${esc(CFG.bankHolder || "")})</p>` : ""}
       </div>
-      <div class="foot__mark" aria-hidden="true">
-        <svg class="mark mark--xl" viewBox="70 130 590 545" aria-hidden="true"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></svg>
-        <span>투스타몰</span>
-      </div>
     </div>`;
 }
 

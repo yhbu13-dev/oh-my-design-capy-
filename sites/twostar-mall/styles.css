@@ -465,16 +465,13 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 
 /* ---------- 푸터 ---------- */
 .foot { margin-top: 96px; background: #0b2f47; color: #9fc0d4; }
-.foot__in { max-width: 1240px; margin: 0 auto; padding: 28px 20px 0; overflow: hidden; }
+.foot__in { max-width: 1240px; margin: 0 auto; padding: 28px 20px 36px; overflow: hidden; }
 .foot__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; padding-bottom: 18px; border-bottom: 1px solid rgba(215, 238, 248,.12); }
 .foot__row nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .foot__row button { border: 0; background: none; color: #cfe4f0; font-size: 12px; padding: 0; }
 .foot__info { padding: 16px 0 8px; font-size: 12px; line-height: 1.8; }
 .foot__info p { margin: 0; }
 .foot__info b { color: #e3f1f8; }
-.foot__mark { display: flex; align-items: flex-end; gap: clamp(10px, 2.4vw, 30px); color: #afdfed; margin-top: 18px; line-height: .78; user-select: none; }
-.foot__mark .mark--xl { width: clamp(64px, 13vw, 180px); height: auto; margin-bottom: 1%; }
-.foot__mark span { font-size: clamp(60px, 15vw, 220px); font-weight: 800; letter-spacing: -0.06em; white-space: nowrap; transform: translateY(14%); }
 
 /* ---------- 사진 위 담기·수량 ---------- */
 /* 담기 버튼 / 수량 조절 — 사진 위 */
