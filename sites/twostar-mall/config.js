@@ -8,6 +8,10 @@ window.STORE_CONFIG = {
   freeShippingOver: null,
   // 오늘 출발 마감 시각 (한국 시간). twostar.net 상품 페이지의 '오늘 출발' 카운트다운 기준. 끄려면 "".
   todayShipCutoff: "23:00",
+  // 직접 올린 상품 사진 (상품번호 → 파일). 상품을 다시 가져와도 유지되고, 3D 대신 이 사진을 먼저 보여준다.
+  productImages: {
+    "1117": "assets/products/1117.webp", // 롯데 트레비 플레인 500ml x 20페트
+  },
   // 결제 수단 노출 순서. 첫 번째가 기본 선택.
   payMethods: [
     { id: "naverpay", label: "네이버페이" },

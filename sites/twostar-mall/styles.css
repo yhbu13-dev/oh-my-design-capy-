@@ -653,3 +653,6 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 @media (hover: none), (max-width: 900px) { .dash__tools > span:last-child { display: none; } }
 
 .hero h1 em { font-style: normal; color: var(--brand); }
+.pcard__media.photo .pcard__canvas { display: none; }
+.pcard__media.has3d.photo .pcard__img { visibility: visible; }
+.pcard__media.photo .pcard__img { object-fit: contain; background: #fff; }
