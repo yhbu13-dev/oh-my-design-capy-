@@ -600,7 +600,7 @@ function syncPallet() {
 }
 
 /* --- 라인 일러스트 (민트 채움 + 진한 선) --- */
-const STAR = (x, y, s) => `<path class="la-s" transform="translate(${x} ${y}) scale(${s})" d="M5 0l1.5 3.3 3.5.4-2.6 2.4.7 3.5L5 7.9 1.9 9.6l.7-3.5L0 3.7l3.5-.4z"/>`;
+const STAR = (x, y, s) => `<g class="la-m" transform="translate(${x} ${y}) scale(${(s * 0.024).toFixed(4)}) translate(-70 -130)"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></g>`; // 로고 바람개비
 const LINE = {
   van: `<svg viewBox="0 0 160 120" class="la" aria-hidden="true">
     <path class="la-d" d="M10 96h140" stroke-dasharray="3 6"/>
@@ -942,7 +942,7 @@ function renderRank() {
   const co = CFG.company || {};
   $("#dash").innerHTML = `
     <aside class="dash__side">
-      <div class="dash__logo"><svg class="mark" viewBox="0 0 40 24" aria-hidden="true"><path class="mark__a" d="M11 1.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L11 16.7l-6.1 3.4 1.4-6.8L1.2 8.6l6.9-.8z"/><path class="mark__b" d="M27 3.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L27 18.7l-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z"/></svg>투스타몰</div>
+      <div class="dash__logo"><svg class="mark" viewBox="70 130 590 545" aria-hidden="true"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></svg>투스타몰</div>
       <nav class="dash__nav" role="tablist" aria-label="카테고리">${cats.map((c) => `<button type="button" role="tab" data-rank="${esc(c)}" aria-selected="${c === rankCat}"><svg viewBox="0 0 24 24" aria-hidden="true">${c === "전체" ? ICON.grid : CAT_ICON[c] || ICON.grid}</svg>${esc(c === "전체" ? "추천 전체" : c.split("/")[0])}</button>`).join("")}</nav>
       <div class="dash__user"><span class="avatar">TS</span><div><b>고객센터</b><small class="num">${esc(co.tel || "")}</small></div></div>
     </aside>
@@ -1136,8 +1136,8 @@ function renderFooter() {
         ${(CFG.bankAccounts || []).length ? `<p>무통장입금 ${CFG.bankAccounts.map((b) => `${esc(b.bank)} ${esc(b.number)}`).join(" / ")} (예금주 ${esc(CFG.bankHolder || "")})</p>` : ""}
       </div>
       <div class="foot__mark" aria-hidden="true">
-        <svg viewBox="0 0 40 24"><path d="M11 1.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L11 16.7l-6.1 3.4 1.4-6.8L1.2 8.6l6.9-.8z"/><path d="M27 3.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L27 18.7l-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z"/></svg>
-        <span>TWOSTAR</span>
+        <svg class="mark mark--xl" viewBox="70 130 590 545" aria-hidden="true"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></svg>
+        <span>투스타몰</span>
       </div>
     </div>`;
 }
