@@ -662,16 +662,33 @@ const initial = (p) => (splitBrand(p.name)[0] || p.name).slice(0, 1);
 
 /* --- 히어로 벤토 --- */
 let heroTimer = null; let heroIdx = 0; let heroItems = [];
-function heroPicks() {
+// 오늘의 추천: 슬롯마다 후보 상위 N개를 두고, 한국 날짜가 바뀔 때마다 다음 후보로 넘어간다.
+// 같은 날에는 누가 들어와도 같은 상품이 나온다. (랜덤 아님 — 날짜로 순번을 정함)
+const HERO_POOL = 12;
+const kstDay = () => Math.floor((Date.now() + 9 * 3600e3) / 86400e3);
+function heroPicks(day = kstDay()) {
   const drinks = state.products.filter((p) => !p.soldOut && !p.options.length && typeOf(p));
-  const best = drinks.find((p) => p.badge === "BEST") || [...drinks].sort((a, b) => a.rank - b.rank)[0];
-  const deal = [...drinks].sort((a, b) => rateOf(b) - rateOf(a))[0];
-  const cheap = [...drinks].filter((p) => p.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice)[0];
-  return [
-    best && { p: best, label: "THIS WEEK BEST" },
-    deal && deal !== best && { p: deal, label: "BIGGEST DROP" },
-    cheap && cheap !== best && cheap !== deal && { p: cheap, label: "LOWEST PER UNIT" },
-  ].filter(Boolean);
+  const byRank = [...drinks].sort((a, b) => a.rank - b.rank);
+  const bestPool = drinks.filter((p) => p.badge === "BEST");
+  const slots = [
+    { label: "TODAY'S BEST", pool: (bestPool.length >= 3 ? bestPool : [...bestPool, ...byRank.filter((p) => !bestPool.includes(p))]).slice(0, HERO_POOL) },
+    { label: "TODAY'S DROP", pool: [...drinks].filter((p) => rateOf(p) > 0).sort((a, b) => rateOf(b) - rateOf(a)).slice(0, HERO_POOL) },
+    { label: "TODAY'S VALUE", pool: [...drinks].filter((p) => p.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice).slice(0, HERO_POOL) },
+  ];
+  const used = new Set();
+  return slots.map((s, i) => {
+    if (!s.pool.length) return null;
+    // 하루에 한 칸이 아니라 후보 수와 서로소인 보폭으로 건너뛰어 비슷한 상품이 연달아 나오지 않게 하고,
+    // 슬롯마다 시작점을 엇갈려 세 슬롯이 같은 날 같은 순번을 쓰지 않게 한다
+    const n = s.pool.length;
+    const gcd = (x, y) => (y ? gcd(y, x % y) : x);
+    const step = [5, 7, 11, 1].find((v) => gcd(v, n) === 1);
+    for (let k = 0; k < n; k++) {
+      const p = s.pool[(day * step + i * 3 + k) % n];
+      if (!used.has(p.id)) { used.add(p.id); return { p, label: s.label }; }
+    }
+    return null;
+  }).filter(Boolean);
 }
 function renderBento() {
   heroItems = heroPicks();
