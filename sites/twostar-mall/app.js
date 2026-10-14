@@ -149,14 +149,14 @@ function renderHero() {
 function startCountdown() {
   const el = $("#cutoff"); if (!el) return;
   const [hh, mm] = String(CFG.todayShipCutoff || "").split(":").map(Number);
-  if (!Number.isFinite(hh)) { el.closest(".strip__ship").hidden = true; document.querySelector(".tile--dark")?.remove(); return; }
+  if (!Number.isFinite(hh)) { el.closest(".util__ship").hidden = true; document.querySelector(".sub--ship")?.remove(); return; }
   const cut = hh * 3600 + (mm || 0) * 60;
   const tick = () => {
     const kst = new Date(Date.now() + 9 * 3600e3);
     const now = kst.getUTCHours() * 3600 + kst.getUTCMinutes() * 60 + kst.getUTCSeconds();
     const left = cut - now;
     if (left <= 0) {
-      el.closest(".strip__ship").innerHTML = `오늘 주문 마감 · 지금 결제하면 <b>내일 출발</b>`;
+      el.closest(".util__ship").innerHTML = `오늘 출고는 마감됐어요 · 지금 결제하면 <b>내일 출발</b>`;
       document.querySelectorAll("[data-cutoff]").forEach((x) => (x.textContent = "내일 출발"));
       return clearInterval(t);
     }
@@ -231,7 +231,7 @@ function renderGrid() {
   const coll = COLLECTIONS.find((c) => c.id === state.coll);
   $("#resultCount").innerHTML = coll
     ? `<button class="coll-chip" type="button" data-clear-coll aria-label="기획전 해제">${esc(coll.title.replace("\n", " "))}<span aria-hidden="true">✕</span></button> <b>${list.length.toLocaleString()}</b>개`
-    : isHome() ? `<span class="shelf__title">전체 상품</span> <b>${list.length.toLocaleString()}</b>개` : `<b>${list.length.toLocaleString()}</b>개 상품`;
+    : isHome() ? `<span class="shelf__title">전체상품</span> 총 <b>${list.length.toLocaleString()}</b>개` : `<b>${list.length.toLocaleString()}</b>개 상품`;
   $("#empty").hidden = list.length > 0;
   $("#more").hidden = list.length <= state.limit;
   $("#grid").innerHTML = list.slice(0, state.limit).map(itemHtml).join("");
@@ -569,68 +569,7 @@ function packArt(p, size = "") {
   return `<div class="ph tone-${toneOf(p)} ${size}"><svg viewBox="0 0 120 120" class="pk" aria-hidden="true">${PACK[kindOf(p)]}</svg><b>${esc(shortName(p.name))}</b>${spec ? `<span>${esc(spec)}</span>` : ""}</div>`;
 }
 
-/* --- 라인 일러스트 (민트 채움 + 진한 선) --- */
-const STAR = (x, y, s) => `<g class="la-m" transform="translate(${x} ${y}) scale(${(s * 0.024).toFixed(4)}) translate(-70 -130)"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></g>`; // 로고 바람개비
-const LINE = {
-  van: `<svg viewBox="0 0 160 120" class="la" aria-hidden="true">
-    <path class="la-d" d="M10 96h140" stroke-dasharray="3 6"/>
-    <path class="la-d" d="M4 52h12M2 62h16M6 72h10"/>
-    <path class="la-f" d="M22 82V40a6 6 0 0 1 6-6h62v48z"/>
-    <path class="la-f2" d="M90 46h24l18 18v18H90z"/>
-    <path d="M22 82V40a6 6 0 0 1 6-6h62v48M90 46h24l18 18v18H90M22 82h110"/>
-    <path class="la-w0" d="M96 52h16l12 12H96z"/>
-    <rect x="30" y="56" width="18" height="16" rx="1"/><rect x="52" y="56" width="18" height="16" rx="1"/><rect x="41" y="40" width="18" height="16" rx="1"/>
-    <path d="M39 56v6M61 56v6M50 40v6"/>
-    <circle cx="44" cy="84" r="9" class="la-wh"/><circle cx="44" cy="84" r="3.5"/><circle cx="112" cy="84" r="9" class="la-wh"/><circle cx="112" cy="84" r="3.5"/>
-    ${STAR(108, 14, 1.2)}${STAR(124, 22, 0.9)}
-  </svg>`,
-  receipt: `<svg viewBox="0 0 160 120" class="la" aria-hidden="true">
-    <path class="la-f" d="M30 14h64v92l-8-6-8 6-8-6-8 6-8-6-8 6-8-6-8 6z"/>
-    <path d="M30 14h64v92l-8-6-8 6-8-6-8 6-8-6-8 6-8-6-8 6zM42 32h40M42 44h28M42 56h36M42 68h20"/>
-    <path d="M74 44h8M74 68h8"/>
-    <circle cx="104" cy="70" r="20" class="la-f2"/><circle cx="104" cy="70" r="13" class="la-wh"/><path d="M118 84l16 16"/>
-    <circle cx="128" cy="30" r="11" class="la-dk"/><path class="la-inv" d="M124.5 27a3.5 3.5 0 1 1 5 3.2c-1 .5-1.5 1.2-1.5 2.3M128 36.5v.5"/>
-  </svg>`,
-  boxes: `<svg viewBox="0 0 160 120" class="la" aria-hidden="true">
-    <path class="la-d" d="M8 104h144" stroke-dasharray="3 6"/>
-    <rect x="34" y="66" width="36" height="34" class="la-f"/><rect x="72" y="66" width="36" height="34" class="la-f2"/><rect x="52" y="30" width="36" height="34" class="la-f"/>
-    <path d="M34 66h36v34H34zM72 66h36v34H72zM52 30h36v34H52zM46 66v10M84 66v10M64 30v10"/>
-    <path d="M118 22v76h18M118 98l-4 6M136 98l4 6"/><circle cx="114" cy="104" r="4" class="la-wh"/><circle cx="140" cy="104" r="4" class="la-wh"/>
-    <path class="la-d" d="M20 40c4-4 8-4 12 0M14 52c4-4 8-4 12 0"/>
-  </svg>`,
-  repeat: `<svg viewBox="0 0 160 120" class="la" aria-hidden="true">
-    <rect x="24" y="22" width="84" height="80" rx="6" class="la-f"/>
-    <path d="M24 40h84M44 14v14M88 14v14"/><rect x="24" y="22" width="84" height="80" rx="6"/>
-    <path d="M36 54l5 5 8-9M60 54l5 5 8-9M84 54l5 5 8-9M36 78l5 5 8-9M60 78l5 5 8-9"/><rect x="82" y="72" width="16" height="16" rx="2" class="la-wh"/>
-    <circle cx="124" cy="80" r="18" class="la-dk"/><path class="la-inv" d="M124 70v10l7 5"/>
-    <path d="M118 30a20 20 0 0 1 20 14l4-6M138 44l-7-1"/>
-  </svg>`,
-  clip: `<svg viewBox="0 0 200 130" class="la" aria-hidden="true">
-    <rect x="44" y="12" width="78" height="106" rx="8" class="la-wh"/><rect x="68" y="6" width="30" height="14" rx="4" class="la-f2"/>
-    <rect x="44" y="12" width="78" height="106" rx="8"/><rect x="68" y="6" width="30" height="14" rx="4"/>
-    <path d="M58 40h30M58 54h50M58 68h42M58 82h46M58 96h24"/><path d="M96 40l4 4 8-8"/>
-    <rect x="128" y="74" width="30" height="26" class="la-f"/><rect x="146" y="50" width="30" height="24" class="la-f2"/><rect x="128" y="74" width="30" height="26"/><rect x="146" y="50" width="30" height="24"/>
-    <path d="M143 74v8M161 50v7"/><path d="M118 118h70" stroke-dasharray="3 5"/>
-    <path d="M18 98l30-30 8 8-30 30-12 4z" class="la-f2"/><path d="M18 98l30-30 8 8-30 30-12 4zM44 72l8 8"/>
-    ${STAR(160, 18, 1.4)}${STAR(178, 30, 1)}
-  </svg>`,
-};
-const ICON = {
-  calc: `<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11v6M8 15h2M12 15h2"/>`,
-  truck: `<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.5"/><circle cx="17" cy="17.5" r="1.5"/>`,
-  repeat: `<path d="M4 12a7 7 0 0 1 12-5l2 2M20 12a7 7 0 0 1-12 5l-2-2"/><path d="M18 4v5h-5M6 20v-5h5"/>`,
-  search: `<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>`,
-  bars: `<path d="M5 20V10M10 20V4M15 20v-7M20 20v-4"/>`,
-  tag: `<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="7.5" r="1.3"/>`,
-  sheet: `<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>`,
-  clock: `<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>`,
-  pin: `<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>`,
-  grid: `<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>`,
-};
-const ico = (k, cls = "ico") => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true">${ICON[k]}</svg>`;
-const initial = (p) => (splitBrand(p.name)[0] || p.name).slice(0, 1);
-
-/* --- 히어로 벤토 --- */
+/* --- 메인 배너 --- */
 let heroTimer = null; let heroIdx = 0; let heroItems = [];
 // 오늘의 추천: 슬롯마다 후보 상위 N개를 두고, 한국 날짜가 바뀔 때마다 다음 후보로 넘어간다.
 // 같은 날에는 누가 들어와도 같은 상품이 나온다. (랜덤 아님 — 날짜로 순번을 정함)
@@ -641,9 +580,9 @@ function heroPicks(day = kstDay()) {
   const byRank = [...drinks].sort((a, b) => a.rank - b.rank);
   const bestPool = drinks.filter((p) => p.badge === "BEST");
   const slots = [
-    { label: "TODAY'S BEST", pool: (bestPool.length >= 3 ? bestPool : [...bestPool, ...byRank.filter((p) => !bestPool.includes(p))]).slice(0, HERO_POOL) },
-    { label: "TODAY'S DROP", pool: [...drinks].filter((p) => rateOf(p) > 0).sort((a, b) => rateOf(b) - rateOf(a)).slice(0, HERO_POOL) },
-    { label: "TODAY'S VALUE", pool: [...drinks].filter((p) => p.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice).slice(0, HERO_POOL) },
+    { label: "오늘의 추천", pool: (bestPool.length >= 3 ? bestPool : [...bestPool, ...byRank.filter((p) => !bestPool.includes(p))]).slice(0, HERO_POOL) },
+    { label: "할인율 높은 상품", pool: [...drinks].filter((p) => rateOf(p) > 0).sort((a, b) => rateOf(b) - rateOf(a)).slice(0, HERO_POOL) },
+    { label: "개당 최저가", pool: [...drinks].filter((p) => p.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice).slice(0, HERO_POOL) },
   ];
   const used = new Set();
   return slots.map((s, i) => {
@@ -663,25 +602,22 @@ function heroPicks(day = kstDay()) {
 function renderBento() {
   heroItems = heroPicks();
   const free = state.products.filter((p) => feeOf(p) === 0).length;
-  $("#heroFacts").innerHTML = `
-    <div><dt>취급 상품</dt><dd class="num">${state.products.length}<small>종</small></dd></div>
-    <div><dt>무료배송</dt><dd class="num">${free}<small>종</small></dd></div>
-    <div><dt>당일 출고 마감</dt><dd class="num">${esc(CFG.todayShipCutoff || "-")}</dd></div>`;
   const last = store.get("ts.orders", [])[0];
   $("#bento").innerHTML = `
     <article class="pcard" id="pcard">
-      <div class="pcard__media" id="pcardMedia"></div>
       <div class="pcard__body" id="pcardBody"></div>
-      <div class="pcard__dots" id="pcardDots" role="tablist" aria-label="추천 상품 넘기기">${heroItems.map((_, i) => `<button type="button" role="tab" data-hero="${i}" aria-label="${i + 1}번째 추천"><i></i></button>`).join("")}</div>
+      <div class="pcard__media" id="pcardMedia"></div>
+      <div class="pcard__pager">
+        <button type="button" data-hero-step="-1" aria-label="이전">‹</button>
+        <span class="num" id="pcardDots"></span>
+        <button type="button" data-hero-step="1" aria-label="다음">›</button>
+      </div>
     </article>
-    <div class="tiles">
-      <div class="tile tile--art">${LINE.van}<span class="tile__cap">문 앞까지 택배 · 박스 단위</span></div>
-      <button class="tile" type="button" data-scroll="planner"><b>탕비실 계산기</b><small>인원만 넣으면 발주서</small>${ico("calc")}</button>
-      <button class="tile" type="button" data-free-only><b>무료배송</b><small>${free}종 모아보기</small>${ico("truck")}</button>
-      <div class="tile tile--dark"><span class="tag tag--neon">SAME-DAY</span><strong class="num" data-cutoff>--:--:--</strong><small>${esc(CFG.todayShipCutoff || "")} 전 결제 시 오늘 출발</small><div class="tile__track" aria-hidden="true"><i data-dayprogress></i></div></div>
-      ${last ? `<button class="tile" type="button" data-reorder><b>지난 주문</b><small>그대로 다시 담기</small>${ico("repeat")}</button>`
-        : `<button class="tile" type="button" data-word="제로"><b>인기 검색어</b><small>제로 · 탄산수 · 시럽</small>${ico("search")}</button>`}
-      <button class="tile" type="button" data-scroll="compare"><b>100ml당 비교</b><small>같은 기준 가격표</small>${ico("bars")}</button>
+    <div class="subs">
+      <button class="sub" type="button" data-scroll="planner"><small>사무실 탕비실 담당자라면</small><b>인원만 넣으면 <br>발주서가 나와요</b><span>계산기 열기</span></button>
+      <div class="sub sub--ship"><small>오늘출발 마감까지</small><b class="num" data-cutoff>--:--:--</b><span>${esc(CFG.todayShipCutoff || "")}까지 결제 완료 시</span></div>
+      ${last ? `<button class="sub" type="button" data-reorder><small>지난번 주문 그대로</small><b>한 번에 <br>다시 담기</b><span>${last.items.length}개 상품</span></button>`
+        : `<button class="sub" type="button" data-free-only><small>배송비 걱정 없이</small><b>무료배송 <br>${free}개 상품</b><span>모아보기</span></button>`}
     </div>`;
   showHero(0);
   const card = $("#pcard");
@@ -692,61 +628,27 @@ function renderBento() {
   start();
 }
 function showHero(i) {
-  heroIdx = i;
-  const it = heroItems[i]; if (!it) return;
+  heroIdx = (i + heroItems.length) % heroItems.length;
+  const it = heroItems[heroIdx]; if (!it) return;
   const p = it.p;
-  $("#pcard").dataset.id = p.id;
+  const card = $("#pcard");
+  card.dataset.id = p.id;
+  card.className = `pcard tone-${toneOf(p)}`;
   const media = $("#pcardMedia");
-  media.querySelectorAll(".pcard__img, .ph").forEach((n) => n.remove());
+  media.innerHTML = "";
   const img = document.createElement("img");
   img.className = "pcard__img"; img.alt = p.name; img.src = p.image;
-  media.prepend(img);
+  media.append(img);
   media.classList.toggle("photo", p.ownPhoto); // 직접 올린 사진은 잘리지 않게
-  const t = typeOf(p);
-  const similar = state.products.filter((q) => q !== p && !q.soldOut && typeOf(q) === t && q.unitPrice).sort((a, b) => a.unitPrice - b.unitPrice).slice(0, 3);
   const spec = [p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ");
+  const r = rateOf(p);
   $("#pcardBody").innerHTML = `
-    <div class="pcard__head">
-      <span class="tag tag--mint">${esc(it.label)}</span>
-      <h3>${esc(shortName(p.name))}</h3>
-      <p class="mono">${esc(spec)}${spec ? " · " : ""}No.${esc(p.id)}</p>
-      <div class="pcard__btns"><button class="btn btn--ghost btn--sm" type="button" data-act="open">상품 상세 보기</button><button class="btn btn--dark btn--sm" type="button" data-act="add">담기</button></div>
-    </div>
-    <p class="pcard__label">한눈에 보기</p>
-    <div class="offer">
-      <div class="offer__top"><span class="sq tone-${toneOf(p)}">${esc(initial(p))}</span><b>투스타몰 판매가</b><span class="tag tag--mint tag--sm">BEST OFFER</span></div>
-      <div class="offer__m">
-        <div><b class="num">${rateOf(p) ? `${rateOf(p)}%` : "—"}</b><small>할인율</small></div>
-        <div><b class="num">${won(p.salePrice)}</b><small>판매가</small></div>
-        <div><b class="num">${p.unitPrice ? won(p.unitPrice) : "—"}</b><small>${esc(p.pack.unit)}당</small></div>
-      </div>
-    </div>
-    ${similar.length ? `<p class="pcard__label">비슷한 상품</p>
-    <ul class="others">${similar.map((q) => `<li data-id="${esc(q.id)}"><button type="button" data-act="open">
-      <span class="sq tone-${toneOf(q)}">${esc(initial(q))}</span><span class="others__name">${esc(shortName(q.name))}</span>
-      <span class="others__price num">${won(q.unitPrice)}<small>/${esc(q.pack.unit)}</small></span><span class="dot-tag ${feeOf(q) === 0 ? "is-free" : ""}">${feeOf(q) === 0 ? "무료배송" : "배송비"}</span>
-    </button></li>`).join("")}</ul>` : ""}`;
-  document.querySelectorAll("#pcardDots button").forEach((d, k) => {
-    d.setAttribute("aria-selected", k === i);
-    const bar = d.querySelector("i"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "";
-  });
-}
-
-/* --- 문제 제기 3칸 --- */
-function renderDilemma() {
-  const free = state.products.filter((p) => feeOf(p) === 0).length;
-  const items = [
-    { art: LINE.receipt, title: "제각각인 용량과 입수", text: "355ml × 24캔과 1.5L × 12병, 어느 쪽이 싼지 매번 계산해야 합니다.", fix: "100ml당 가격 비교", go: "compare" },
-    { art: LINE.boxes, title: "무겁고 자리 차지하는 박스", text: "생수·탄산 박스를 사러 마트를 오가는 시간과 수고가 듭니다.", fix: `무료배송 ${free}종`, free: true },
-    { art: LINE.repeat, title: "끝없이 반복되는 발주", text: "탕비실이 비면 다시 인원과 수량을 세고 장바구니를 채워야 합니다.", fix: "탕비실 계산기", go: "planner" },
-  ];
-  $("#dilemma").innerHTML = items.map((d) => `
-    <article class="dl">
-      <div class="dl__art">${d.art}</div>
-      <h3>${esc(d.title)}</h3>
-      <p>${esc(d.text)}</p>
-      <button class="dl__fix" type="button" ${d.go ? `data-scroll="${d.go}"` : "data-free-only"}>${esc(d.fix)}으로 해결 →</button>
-    </article>`).join("");
+    <p class="pcard__label">${esc(it.label)}</p>
+    <h3>${esc(shortName(p.name))}</h3>
+    ${spec ? `<p class="pcard__spec">${esc(spec)}</p>` : ""}
+    <p class="pcard__price">${r ? `<em class="num">${r}%</em>` : ""}<b class="num">${won(p.salePrice)}</b>${p.unitPrice ? `<small class="num">${esc(p.pack.unit)}당 ${won(p.unitPrice)}</small>` : ""}</p>
+    <div class="pcard__btns"><button class="btn btn--ghost" type="button" data-act="open">자세히 보기</button><button class="btn btn--dark" type="button" data-act="add">장바구니 담기</button></div>`;
+  $("#pcardDots").innerHTML = `<b>${heroIdx + 1}</b> / ${heroItems.length}`;
 }
 
 /* --- 카테고리 아이콘 --- */
@@ -766,7 +668,7 @@ function renderCatIcons() {
   const count = {};
   state.products.forEach((p) => (count[p.category] = (count[p.category] || 0) + 1));
   const cats = Object.keys(count).filter((c) => c !== "기타").sort((a, b) => count[b] - count[a]);
-  $("#catIcons").innerHTML = cats.map((c) => `<button type="button" data-cat-ico="${esc(c)}"><span class="ci tone-${CAT_TONE[c] || "slate"}"><svg viewBox="0 0 24 24" aria-hidden="true">${CAT_ICON[c] || `<rect x="5" y="5" width="14" height="14" rx="3"/>`}</svg></span><b>${esc(c.split("/")[0])}</b><small>${count[c]}</small></button>`).join("");
+  $("#catIcons").innerHTML = cats.map((c) => `<button type="button" data-cat-ico="${esc(c)}"><span class="ci tone-${CAT_TONE[c] || "slate"}"><svg viewBox="0 0 24 24" aria-hidden="true">${CAT_ICON[c] || `<rect x="5" y="5" width="14" height="14" rx="3"/>`}</svg></span><b>${esc(c.split("/")[0])}</b></button>`).join("");
 }
 
 /* --- 탕비실 계산기 --- */
@@ -843,8 +745,7 @@ function planStatsHtml(r) {
     </section>`;
 }
 function planOrderHtml(r) {
-  return `<p class="step__title">발주서</p>
-    <ul class="order">
+  return `    <ul class="order">
       ${r.rows.map((row) => `<li data-id="${esc(row.p.id)}">
         <i class="sw tone-${row.t.tone}"></i>
         <div class="order__name"><b>${esc(row.t.label)}</b><span>${esc(row.p.name)}</span><small class="num">${row.p.pack.unit}당 ${won(row.p.unitPrice)} · ${row.units}${row.p.pack.unit}</small></div>
@@ -865,12 +766,10 @@ function updatePlan() {
 function renderPlanner() {
   const r = buildPlan();
   $("#planner").innerHTML = `
-    <div class="planner__head">
-      <div><span class="tag tag--mint">HOW IT WORKS</span><h2 id="plannerTitle">탕비실 음료,<br>3단계면 발주 끝.</h2></div>
-      <p>인원·기간·종류만 고르면 가성비 좋은 박스로 발주서를 짜 드립니다. 1인 하루 ${plan.perDay}잔 기준.</p>
-    </div>
+    <header class="sec__head"><h2 id="plannerTitle">탕비실 음료 계산기 <span class="sec__sub">1인 하루 ${plan.perDay}잔 기준으로 계산해요</span></h2></header>
     <div class="steps">
       <article class="step">
+        <p class="step__no"><b>1</b>조건 고르기</p>
         <div class="step__card planner__controls">
           <div class="ctl">
             <label for="pl-people">인원 <output class="num">${plan.people}명</output></label>
@@ -886,15 +785,17 @@ function renderPlanner() {
             <div class="seg seg--multi">${TYPES.map((t) => `<button type="button" aria-pressed="${plan.types.includes(t.id)}" data-pl-type="${t.id}"><i class="sw tone-${t.tone}"></i>${t.label}</button>`).join("")}</div>
           </div>
         </div>
-        <div class="step__cap"><b>Step 1</b><span>인원·기간·마실 종류를 고릅니다.</span></div>
+        
       </article>
       <article class="step">
+        <p class="step__no"><b>2</b>예상 수량</p>
         <div class="step__card step__card--viz"><div id="planStats">${planStatsHtml(r)}</div></div>
-        <div class="step__cap"><b>Step 2</b><span>박스 구성·재고 소진일·비용 비중을 한눈에 봅니다.</span></div>
+        
       </article>
       <article class="step">
+        <p class="step__no"><b>3</b>발주서</p>
         <div class="step__card" id="planOrder">${planOrderHtml(r)}</div>
-        <div class="step__cap"><b>Step 3</b><span>발주서를 확인하고 그대로 장바구니에 담습니다.</span></div>
+        
       </article>
     </div>`;
 }
@@ -910,16 +811,13 @@ function renderCompare() {
   const max = Math.max(...list.map(per100), 1);
   const t = TYPES.find((x) => x.id === cmpType);
   $("#compare").innerHTML = `
-    <div class="compare__head">
-      <div><span class="tag tag--mint">PRICE / 100ML</span><h2 id="compareTitle">100ml당 가격,<br>한눈에 비교.</h2></div>
-      <p>용량과 입수가 달라도 같은 기준으로 봅니다. 막대가 짧을수록 저렴합니다.</p>
-    </div>
+    <header class="sec__head"><h2 id="compareTitle">100ml당 가격 비교 <span class="sec__sub">용량이 달라도 같은 기준으로, 막대가 짧을수록 저렴해요</span></h2></header>
     <div class="compare__card">
       <div class="pills" role="tablist">${TYPES.map((x) => `<button type="button" role="tab" aria-selected="${x.id === cmpType}" data-cmp="${x.id}"><i class="sw tone-${x.tone}"></i>${x.label}</button>`).join("")}</div>
       <ol class="bars tone-${t.tone}">
         ${list.map((p, i) => `<li data-id="${esc(p.id)}">
           <button type="button" class="bars__row" data-act="open">
-            <span class="bars__name">${i === 0 ? `<em>최저</em>` : ""}${esc(p.name)}</span>
+            <span class="bars__name">${i === 0 ? `<em>최저가</em>` : ""}${esc(p.name)}</span>
             <span class="bars__track"><i style="width:${Math.max(6, (per100(p) / max) * 100)}%"></i></span>
             <span class="bars__val num"><b>${won(per100(p))}</b><small>${p.pack.unit}당 ${won(p.unitPrice)}</small></span>
           </button>
@@ -936,52 +834,36 @@ function renderRank() {
   // 같은 음료 종류 평균 개당가 대비 (툴팁)
   const avg = {};
   TYPES.forEach((t) => { const l = state.products.filter((p) => typeOf(p) === t && p.unitPrice); avg[t.id] = l.reduce((s, p) => s + p.unitPrice, 0) / (l.length || 1); });
-  const co = CFG.company || {};
   $("#dash").innerHTML = `
-    <aside class="dash__side">
-      <div class="dash__logo"><svg class="mark" viewBox="70 130 590 545" aria-hidden="true"><polygon class="m1" points="188,213 388,213 388,410"/><polygon class="m2" points="427,135 568,272 427,410"/><polygon class="m3" points="652,245 652,440 453,440"/><polygon class="m4" points="217,297 357,435 76,435"/><polygon class="m5" points="155,473 355,473 155,668"/></svg>투스타몰</div>
-      <nav class="dash__nav" role="tablist" aria-label="카테고리">${cats.map((c) => `<button type="button" role="tab" data-rank="${esc(c)}" aria-selected="${c === rankCat}"><svg viewBox="0 0 24 24" aria-hidden="true">${c === "전체" ? ICON.grid : CAT_ICON[c] || ICON.grid}</svg>${esc(c === "전체" ? "추천 전체" : c.split("/")[0])}</button>`).join("")}</nav>
-      <div class="dash__user"><span class="avatar">TS</span><div><b>고객센터</b><small class="num">${esc(co.tel || "")}</small></div></div>
-    </aside>
-    <div class="dash__main">
-      <header class="dash__top"><h3>${esc(rankCat === "전체" ? "추천 상품" : rankCat)}</h3><button class="btn btn--ghost btn--sm" type="button" data-open-cart>${ico("sheet")} 장바구니 보기</button></header>
-      <div class="dash__tools"><span class="tag tag--mint tag--sm">TOP ${list.length}</span><span>행에 마우스를 올리면 같은 종류 평균과 비교합니다.</span></div>
-      <div class="dash__table" role="table" aria-label="추천 상품 표">
-        <div class="trow trow--head" role="row"><span role="columnheader">상품</span><span role="columnheader">구성</span><span role="columnheader">개당</span><span role="columnheader">판매가</span><span role="columnheader">할인</span><span role="columnheader">배송</span><span role="columnheader"><span class="sr-only">담기</span></span></div>
-        ${list.map((p) => {
-          const t = typeOf(p); const a = t && avg[t.id]; const diff = a && p.unitPrice ? Math.round((1 - p.unitPrice / a) * 100) : null;
-          return `<div class="trow item" role="row" data-id="${esc(p.id)}">
-            <span class="trow__p" role="cell"><button type="button" class="trow__img" data-act="open" aria-label="${esc(p.name)}"><img src="${esc(p.image)}" alt="" loading="lazy"></button><span data-act="open"><b>${esc(shortName(p.name))}</b><small class="mono">No.${esc(p.id)}</small></span></span>
-            <span role="cell" class="num">${esc([p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ") || "—")}</span>
-            <span role="cell" class="num">${p.unitPrice ? won(p.unitPrice) : "—"}</span>
-            <span role="cell" class="num"><b>${won(p.salePrice)}</b></span>
-            <span role="cell" class="num trow__rate">${rateOf(p) ? `${rateOf(p)}%` : "—"}</span>
-            <span role="cell"><span class="dot-tag ${feeOf(p) === 0 ? "is-free" : ""}">${feeOf(p) === 0 ? "무료배송" : won(feeOf(p))}</span></span>
-            <span role="cell" class="item__act">${mediaActions(p)}</span>
-            ${diff !== null ? `<span class="trow__tip" aria-hidden="true"><b>${diff >= 0 ? "평균보다 저렴" : "평균보다 비쌈"}</b> ${Math.abs(diff)}%<small>${esc(t.label)} 평균 개당 ${won(a)}</small></span>` : ""}
-          </div>`;
-        }).join("")}
-      </div>
+    <nav class="chips" role="tablist" aria-label="카테고리">${cats.map((c) => `<button type="button" role="tab" data-rank="${esc(c)}" aria-selected="${c === rankCat}">${esc(c === "전체" ? "전체" : c.split("/")[0])}</button>`).join("")}</nav>
+    <div class="dash__table" role="table" aria-label="많이 찾는 상품">
+      <div class="trow trow--head" role="row"><span role="columnheader">순위·상품</span><span role="columnheader">구성</span><span role="columnheader">개당</span><span role="columnheader">판매가</span><span role="columnheader">할인</span><span role="columnheader">배송</span><span role="columnheader"><span class="sr-only">담기</span></span></div>
+      ${list.map((p, i) => {
+        const t = typeOf(p); const a = t && avg[t.id]; const diff = a && p.unitPrice ? Math.round((1 - p.unitPrice / a) * 100) : null;
+        return `<div class="trow item" role="row" data-id="${esc(p.id)}">
+          <span class="trow__p" role="cell"><i class="trow__rank num">${i + 1}</i><button type="button" class="trow__img" data-act="open" aria-label="${esc(p.name)}"><img src="${esc(p.image)}" alt="" loading="lazy"></button><span data-act="open"><b>${esc(shortName(p.name))}</b>${diff !== null && diff > 0 ? `<small>${esc(t.label)} 평균보다 ${diff}% 저렴</small>` : ""}</span></span>
+          <span role="cell" class="num">${esc([p.pack.volume, p.pack.count > 1 ? `${p.pack.count}${p.pack.unit}` : ""].filter(Boolean).join(" × ") || "-")}</span>
+          <span role="cell" class="num">${p.unitPrice ? won(p.unitPrice) : "-"}</span>
+          <span role="cell" class="num"><b>${won(p.salePrice)}</b></span>
+          <span role="cell" class="num trow__rate">${rateOf(p) ? `${rateOf(p)}%` : "-"}</span>
+          <span role="cell" class="trow__ship">${feeOf(p) === 0 ? `<span class="free">무료배송</span>` : won(feeOf(p))}</span>
+          <span role="cell" class="item__act">${mediaActions(p)}</span>
+        </div>`;
+      }).join("")}
     </div>`;
-  $("#features").innerHTML = [
-    ["tag", "모든 박스에 개당 가격", "캔·병·스틱 단위 가격을 함께 보여줘 바로 비교됩니다."],
-    ["sheet", "한 화면 주문서", "수량·배송지·결제수단을 한 화면에서 끝냅니다."],
-    ["clock", `${CFG.todayShipCutoff || ""} 전 결제 시 오늘 출발`, "마감까지 남은 시간을 상단에서 계속 보여줍니다."],
-    ["pin", "배송지·결제수단 기억", "두 번째 주문부터는 자동으로 채워집니다."],
-  ].map(([i, t, d]) => `<article class="feat">${ico(i)}<h3>${esc(t)}</h3><p>${esc(d)}</p></article>`).join("");
 }
 function renderBiz() {
   const co = CFG.company || {};
   $("#biz").innerHTML = `
     <div class="band__in">
-      <div class="band__copy"><span class="tag tag--dark">GET STARTED</span><h2 id="bizTitle">대량 구매·정기 납품,<br>지금 상담하세요.</h2></div>
-      <div class="band__card">
-        <div class="band__art">${LINE.clip}</div>
-        <p>카페·사무실·단체 납품은 담당자가 견적부터 세금계산서까지 챙깁니다. ${esc(co.hours || "")}</p>
-        <div class="band__btns">
-          <button class="btn btn--dark" type="button" data-copy="${esc(co.tel || "")}"><span class="num">${esc(co.tel || "")}</span> 번호 복사 <span aria-hidden="true">→</span></button>
-          <button class="btn btn--white" type="button" data-scroll="planner">탕비실 계산하기</button>
-        </div>
+      <div>
+        <h2 id="bizTitle">대량구매 · 정기납품 문의</h2>
+        <p>카페, 사무실, 학원, 행사 단체 주문은 전화 주시면 견적부터 세금계산서까지 담당자가 직접 처리해 드립니다.</p>
+      </div>
+      <div class="band__call">
+        <a class="band__tel num" href="tel:${esc((co.tel || "").replace(/[^\d]/g, ""))}">${esc(co.tel || "")}</a>
+        <small>${esc(co.hours || "")}</small>
+        <button class="btn btn--ghost btn--sm" type="button" data-copy="${esc(co.tel || "")}">번호 복사</button>
       </div>
     </div>`;
 }
@@ -1004,7 +886,7 @@ function bindHome() {
   });
   $("#home").addEventListener("click", (e) => {
     const t = e.target;
-    const hd = t.closest("[data-hero]"); if (hd) return showHero(Number(hd.dataset.hero));
+    const hs = t.closest("[data-hero-step]"); if (hs) return showHero(heroIdx + Number(hs.dataset.heroStep));
     const w = t.closest("[data-word]"); if (w) { $("#q").value = w.dataset.word; state.q = w.dataset.word; state.limit = PAGE; renderAll(); return scrollToList(); }
     if (t.closest("[data-reorder]")) { const last = store.get("ts.orders", [])[0]; last?.items.forEach((i) => state.byId.has(i.id) && addToCart(i.id, i.options || {}, i.qty)); return toast("지난 주문을 담았어요"); }
     const ci = t.closest("[data-cat-ico]"); if (ci) { state.cat = ci.dataset.catIco; state.coll = null; state.limit = PAGE; renderAll(); return scrollToList(); }
@@ -1014,7 +896,6 @@ function bindHome() {
     if (t.closest("[data-pl-add]")) { buildPlan().items.forEach((i) => addToCart(i.id, {}, i.qty)); return toast("발주서를 장바구니에 담았어요"); }
     const cm = t.closest("[data-cmp]"); if (cm) { cmpType = cm.dataset.cmp; return renderCompare(); }
     const rk = t.closest("[data-rank]"); if (rk) { rankCat = rk.dataset.rank; return renderRank(); }
-    const gc = t.closest("[data-goto-coll]"); if (gc) { state.coll = gc.dataset.gotoColl; state.limit = PAGE; renderAll(); return scrollToList(); }
   });
 }
 // 홈 밖에서도 쓰는 버튼: 섹션 이동, 주문하기, 무료배송 모아보기, 번호 복사
@@ -1028,7 +909,8 @@ function bindGlobal() {
       if (id !== "listTop" && !isHome()) { state.cat = "전체"; state.coll = null; state.q = ""; $("#q").value = ""; renderAll(); }
       return $(`#${id}`)?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
     }
-    if (t.closest("#navOrder") || t.closest("[data-open-cart]")) return openCheckout(state.cart, "cart");
+    if (t.closest("#utilOrder") || t.closest("[data-open-cart]")) return openCheckout(state.cart, "cart");
+    const gc = t.closest("[data-goto-coll]"); if (gc) { state.coll = gc.dataset.gotoColl; state.cat = "전체"; state.limit = PAGE; renderAll(); return scrollToList(); }
     if (t.closest("[data-free-only]")) { state.freeOnly = true; $("#freeOnly").setAttribute("aria-pressed", "true"); state.limit = PAGE; renderGrid(); return scrollToList(); }
     const cp = t.closest("[data-copy]");
     if (cp) { const v = cp.dataset.copy; navigator.clipboard?.writeText(v).then(() => toast(`${v} 복사했어요`), () => toast(v)); }
@@ -1118,17 +1000,23 @@ function renderFooter() {
   const co = CFG.company || {};
   $("#foot").innerHTML = `
     <div class="foot__in">
-      <div class="foot__row">
-        <span>© ${new Date().getFullYear()} ${esc(CFG.name || "투스타몰")}</span>
-        <nav aria-label="하단 바로가기">
-          <button type="button" data-scroll="listTop">전체 상품</button><button type="button" data-scroll="planner">탕비실 계산기</button>
-          <button type="button" data-scroll="compare">가격 비교</button><button type="button" data-scroll="biz">대량 구매</button>
-        </nav>
-      </div>
-      <div class="foot__info">
-        <p>${[co.name && `<b>${esc(co.name)}</b>`, co.ceo && `대표 ${esc(co.ceo)}`, co.bizNo && `사업자등록번호 ${esc(co.bizNo)}`, co.mailOrderNo && `통신판매업신고 ${esc(co.mailOrderNo)}`].filter(Boolean).join(" · ")}</p>
-        <p>${[co.address && esc(co.address), co.tel && `고객센터 ${esc(co.tel)}`, co.hours && esc(co.hours), co.email && esc(co.email)].filter(Boolean).join(" · ")}</p>
-        ${(CFG.bankAccounts || []).length ? `<p>무통장입금 ${CFG.bankAccounts.map((b) => `${esc(b.bank)} ${esc(b.number)}`).join(" / ")} (예금주 ${esc(CFG.bankHolder || "")})</p>` : ""}
+      <nav class="foot__links" aria-label="하단 바로가기">
+        <button type="button" data-scroll="listTop">전체상품</button><button type="button" data-scroll="planner">탕비실 계산기</button>
+        <button type="button" data-scroll="compare">가격비교</button><button type="button" data-scroll="biz">대량구매</button>
+      </nav>
+      <div class="foot__grid">
+        <div class="foot__cs">
+          <p>고객센터</p>
+          <strong class="num">${esc(co.tel || "")}</strong>
+          <small>${esc(co.hours || "")}</small>
+          ${(CFG.bankAccounts || []).length ? `<p class="foot__bank">입금계좌<br>${CFG.bankAccounts.map((b) => `${esc(b.bank)} ${esc(b.number)}`).join("<br>")}<br>예금주 ${esc(CFG.bankHolder || "")}</p>` : ""}
+        </div>
+        <div class="foot__info">
+          <p>${[co.name && `<b>${esc(co.name)}</b>`, co.ceo && `대표 ${esc(co.ceo)}`].filter(Boolean).join(" | ")}</p>
+          <p>${[co.bizNo && `사업자등록번호 ${esc(co.bizNo)}`, co.mailOrderNo && `통신판매업신고 ${esc(co.mailOrderNo)}`].filter(Boolean).join(" | ")}</p>
+          <p>${[co.address && esc(co.address), co.email && esc(co.email)].filter(Boolean).join(" | ")}</p>
+          <p class="foot__copy">Copyright © ${new Date().getFullYear()} ${esc(CFG.name || "투스타몰")}. All rights reserved.</p>
+        </div>
       </div>
     </div>`;
 }
@@ -1140,7 +1028,7 @@ function renderFooter() {
   state.products = await loadProducts();
   state.byId = new Map(state.products.map((p) => [p.id, p]));
   state.cart = state.cart.filter((x) => state.byId.has(x.id));
-  renderBento(); renderDilemma(); renderCatIcons(); renderBiz();
+  renderBento(); renderCatIcons(); renderBiz();
   renderAll(); renderBar();
   bindHome(); bindGlobal();
   startCountdown();
