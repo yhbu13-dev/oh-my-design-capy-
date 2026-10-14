@@ -1,3 +1,6 @@
+/* 영문·숫자는 Roboto(직접 호스팅), 한글은 각 OS 기본 고딕(애플 SD 산돌고딕 Neo / 맑은 고딕) */
+@font-face { font-family: "Roboto"; src: url("assets/fonts/Roboto.woff2") format("woff2"); font-weight: 100 900; font-stretch: 75% 100%; font-display: swap; }
+
 /* 투스타몰 — 흰 바탕, 얇은 회색 선, 작은 모서리. 파랑은 로고·검색창·주요 버튼에만, 할인은 빨강. */
 :root {
   --paper: #ffffff;
@@ -18,7 +21,7 @@
   --accent: #1d6d9e;
   --warn: #d6402f;
   --scrim: rgba(0, 0, 0, .45);
-  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font: "Roboto", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "Noto Sans KR", sans-serif;
   --r: 4px;
   --r-lg: 6px;
   --navy: var(--forest); --navy-ink: var(--forest-ink); --ok: var(--forest);

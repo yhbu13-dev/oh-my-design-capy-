@@ -2,6 +2,8 @@
 
 화면 구성(위→아래): 상단 안내줄(오늘출발 남은 시간·고객센터) · 로고+검색창+장바구니 · 카테고리 탭 → 메인 배너(날짜별 추천 3개 슬라이드) + 보조 배너 3개 → 카테고리 아이콘 → 지금 할인 중인 상품 → 많이 찾는 상품 TOP 10 → 탕비실 음료 계산기 → 100ml당 가격 비교 → 기획전 → 대량구매 문의 → 전체상품 → 푸터.
 
+글꼴: 영문·숫자는 `assets/fonts/Roboto.woff2`(Roboto 가변 글꼴, 라틴 문자만 추림, 라이선스 `assets/fonts/OFL.txt`), 한글은 OS 기본 고딕(맥 애플 SD 산돌고딕 Neo, 윈도우 맑은 고딕).
+
 [twostar.net](https://twostar.net/) / [스마트스토어 twostarmall](https://smartstore.naver.com/twostarmall) 상품을 옮겨 담는 정적 쇼핑몰입니다.
 빌드 없이 `index.html` 하나로 돌아가며, 아무 정적 호스팅(Vercel, Netlify, GitHub Pages, S3)에 그대로 올리면 됩니다.
 
