@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>투스타몰</title>
-  <meta name="description" content="음료·커피·시럽 박스 도매 투스타몰. 23시까지 결제하면 오늘 출발합니다.">
+  <meta name="description" content="음료·커피·시럽 박스 도매 투스타몰. 오전 9시까지 결제하면 당일 출발합니다.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='70 130 590 545'><polygon fill='%233398c9' points='188,213 388,213 388,410'/><polygon fill='%23afdfed' points='427,135 568,272 427,410'/><polygon fill='%237ec9e0' points='652,245 652,440 453,440'/><polygon fill='%2355bde5' points='217,297 357,435 76,435'/><polygon fill='%2355bde5' points='155,473 355,473 155,668'/></svg>">
   <link rel="preload" href="assets/fonts/Roboto.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
@@ -12,7 +12,7 @@
 <body>
   <div class="util">
     <div class="util__in">
-      <p class="util__ship"><span>오늘출발</span> <b id="cutoff" class="num">--:--:--</b> 남음 · 23시까지 결제하면 오늘 보내드려요</p>
+      <p class="util__ship"><span data-shipday>오늘출발</span> 마감까지 <b id="cutoff" class="num">--:--:--</b> · <span class="util__rule" data-shiprule></span></p>
       <nav class="util__links" aria-label="고객 메뉴">
         <button type="button" id="utilOrder">주문하기</button>
         <button type="button" data-scroll="biz">대량구매 문의</button>

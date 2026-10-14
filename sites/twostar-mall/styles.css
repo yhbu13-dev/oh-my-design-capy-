@@ -72,6 +72,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .util__in { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .util p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .util__ship span { color: var(--forest); font-weight: 700; }
+.util__ship .util__rule { color: inherit; font-weight: 400; }
 .util__ship b { color: var(--sale); font-weight: 700; }
 .util__links { display: flex; align-items: center; gap: 0; white-space: nowrap; }
 .util__links > * { padding: 0 10px; border: 0; background: none; font-size: 12px; color: var(--ink-2); }
@@ -156,11 +157,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .sub { position: relative; border: 1px solid var(--rule); background: var(--paper); border-radius: var(--r-lg); padding: 16px 18px; text-align: left; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .sub small { font-size: 12px; color: var(--ink-3); }
 .sub b { font-size: 17px; font-weight: 700; line-height: 1.35; letter-spacing: -0.04em; }
-.sub span { margin-top: auto; padding-top: 6px; font-size: 12px; color: var(--ink-2); }
-button.sub span::after { content: " ›"; }
+.sub > span { margin-top: auto; padding-top: 6px; font-size: 12px; color: var(--ink-2); }
+button.sub > span::after { content: " ›"; }
 @media (hover: hover) { button.sub:hover { border-color: var(--ink-3); } }
 .sub--ship { background: #0b2f47; border-color: #0b2f47; color: #fff; }
-.sub--ship small, .sub--ship span { color: #9fc3d8; }
+.sub--ship small, .sub--ship > span { color: #9fc3d8; }
 .sub--ship b { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
 @media (max-width: 900px) {
   .bento { grid-template-columns: minmax(0, 1fr); }
@@ -168,7 +169,7 @@ button.sub span::after { content: " ›"; }
   .sub { padding: 12px; }
   .sub b { font-size: 14px; }
   .sub--ship b { font-size: 19px; }
-  .sub span { font-size: 11px; }
+  .sub > span { font-size: 11px; }
 }
 @media (max-width: 600px) {
   .main { padding-top: 12px; }
@@ -185,7 +186,7 @@ button.sub span::after { content: " ›"; }
   .sub { padding: 12px 10px; }
   .sub b { font-size: 13px; }
   .sub--ship b { font-size: 17px; }
-  .sub--ship span { font-size: 10px; }
+  .sub--ship > span { font-size: 10px; }
 }
 
 /* 카테고리 아이콘 */

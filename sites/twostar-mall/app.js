@@ -145,28 +145,28 @@ function renderHero() {
   $("#promos").innerHTML = html;
 }
 
-/* ---------------- 오늘 출발 카운트다운 (한국 시간 기준) ---------------- */
+/* ---------------- 출발 마감 카운트다운 (한국 시간 기준) ---------------- */
+// 마감 전이면 오늘 마감까지, 마감이 지났으면 다음 날 마감까지 센다 (그때 결제분은 내일 출발)
 function startCountdown() {
   const el = $("#cutoff"); if (!el) return;
   const [hh, mm] = String(CFG.todayShipCutoff || "").split(":").map(Number);
   if (!Number.isFinite(hh)) { el.closest(".util__ship").hidden = true; document.querySelector(".sub--ship")?.remove(); return; }
   const cut = hh * 3600 + (mm || 0) * 60;
+  const label = mm ? `오전 ${hh}시 ${mm}분` : hh < 12 ? `오전 ${hh}시` : `${hh}시`;
+  document.querySelectorAll("[data-shiprule]").forEach((x) => (x.textContent = `${label}까지 결제하면 당일 발송, 이후 결제는 다음 날 발송`));
+  document.querySelectorAll("[data-shipnote]").forEach((x) => (x.textContent = `${label}까지 결제 완료 시`));
+  const f = (n) => String(n).padStart(2, "0");
   const tick = () => {
     const kst = new Date(Date.now() + 9 * 3600e3);
     const now = kst.getUTCHours() * 3600 + kst.getUTCMinutes() * 60 + kst.getUTCSeconds();
-    const left = cut - now;
-    if (left <= 0) {
-      el.closest(".util__ship").innerHTML = `오늘 출고는 마감됐어요 · 지금 결제하면 <b>내일 출발</b>`;
-      document.querySelectorAll("[data-cutoff]").forEach((x) => (x.textContent = "내일 출발"));
-      return clearInterval(t);
-    }
-    const f = (n) => String(n).padStart(2, "0");
+    const before = now < cut;
+    const left = before ? cut - now : cut + 86400 - now;
     const txt = `${f(Math.floor(left / 3600))}:${f(Math.floor(left / 60) % 60)}:${f(left % 60)}`;
     el.textContent = txt;
     document.querySelectorAll("[data-cutoff]").forEach((x) => (x.textContent = txt));
-    document.querySelectorAll("[data-dayprogress]").forEach((x) => (x.style.width = `${Math.min(100, (now / cut) * 100)}%`));
+    document.querySelectorAll("[data-shipday]").forEach((x) => (x.textContent = before ? "오늘출발" : "내일출발"));
   };
-  const t = setInterval(tick, 1000); tick();
+  setInterval(tick, 1000); tick();
 }
 
 /* ---------------- 목록 ---------------- */
@@ -615,7 +615,7 @@ function renderBento() {
     </article>
     <div class="subs">
       <button class="sub" type="button" data-scroll="planner"><small>사무실 탕비실 담당자라면</small><b>인원만 넣으면 <br>발주서가 나와요</b><span>계산기 열기</span></button>
-      <div class="sub sub--ship"><small>오늘출발 마감까지</small><b class="num" data-cutoff>--:--:--</b><span>${esc(CFG.todayShipCutoff || "")}까지 결제 완료 시</span></div>
+      <div class="sub sub--ship"><small><span data-shipday>오늘출발</span> 마감까지</small><b class="num" data-cutoff>--:--:--</b><span data-shipnote></span></div>
       ${last ? `<button class="sub" type="button" data-reorder><small>지난번 주문 그대로</small><b>한 번에 <br>다시 담기</b><span>${last.items.length}개 상품</span></button>`
         : `<button class="sub" type="button" data-free-only><small>배송비 걱정 없이</small><b>무료배송 <br>${free}개 상품</b><span>모아보기</span></button>`}
     </div>`;

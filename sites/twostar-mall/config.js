@@ -6,8 +6,8 @@ window.STORE_CONFIG = {
   shippingFee: 3000,
   // 일정 금액 이상 무료배송 정책이 있으면 금액을 넣으세요 (예: 50000). 없으면 null.
   freeShippingOver: null,
-  // 오늘 출발 마감 시각 (한국 시간). twostar.net 상품 페이지의 '오늘 출발' 카운트다운 기준. 끄려면 "".
-  todayShipCutoff: "23:00",
+  // 당일 출발 마감 시각 (한국 시간). 마감 전 결제는 오늘, 이후 결제는 다음 날 출발. 끄려면 "".
+  todayShipCutoff: "09:00",
   // 직접 올린 상품 사진 (상품번호 → 파일). 상품을 다시 가져와도 유지된다.
   productImages: {
     "1117": "assets/products/1117.webp", // 롯데 트레비 플레인 500ml x 20페트
